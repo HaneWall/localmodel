@@ -2,13 +2,12 @@
 % E1 = [E_probe, 0, 0], E2 = [0, E_pump, 0], Detector=[1, 0, 0]
 clear all;
 c = 299792458;
-q = -1.60217662e-19;
+q = 1.60217662e-19;
 me = 9.10938e-31;
 n0 = 2.2e28; 
 bandgaps = [7.5]; 
 wavelength_probe = 800e-9;
 wavelength_pump = 2100e-9;
-adk0 = 8.540703969149006e+12;
 
 % integration params
 t_end = 1000e-15;
@@ -56,7 +55,8 @@ for b = 1:length(bandgaps)
         for j = 1:L
             normed_e_field(:,j) = norm(e_field(:,j));
         end
-        displacements_x = displacement_x_new(bandgaps(b), max(normed_e_field), e_field);
+        %displacements_x = displacement_x_new(bandgaps(b), max(normed_e_field), e_field);
+        displacements_x = displacement_x_new(bandgaps(b), normed_e_field + 1, e_field);
         ADK = tangent_Gamma_ADK(normed_e_field, bandgaps);
         rho_sfi = integrate_population_cb(ADK, delta_t, t);
         drho = cent_diff_n(rho_sfi, delta_t, 3);
@@ -81,7 +81,7 @@ for b = 1:length(bandgaps)
         kerr_first_harm(b, i) = P_kerr_current(idx);
         injection_first_harm(b, i) = P_injection_current(idx);
         overall_along_x_harm(b, i) = P_overall_current(idx);
-        if i == 20
+        if i == 10
             figure(1)
             semilogy(2*pi*f, P_overall_current(1:n_fft/2 + 1),'black');
             hold on
@@ -94,7 +94,7 @@ for b = 1:length(bandgaps)
             xlabel('$\omega$ in $rads^{-1}$','interpreter','latex');
             legend('Overall', 'Kerr', 'Brunel', 'Injection', '$2\omega_{pump} + \omega{_probe}$', '$\omega_{pump}$', '$\omega_{probe}$', 'Interpreter','latex');
             ylabel('radiated power along probe polarization')
-            mytitle = ['Pump \perp Probe I_{pump} = ', num2str(e_pump_ranges(20), '%.3e'), ' W/m^2'];
+            mytitle = ['Pump \perp Probe I_{pump} = ', num2str(e_pump_ranges(10), '%.3e'), ' W/m^2'];
             title(mytitle, 'interpreter', 'tex')
         end
     end

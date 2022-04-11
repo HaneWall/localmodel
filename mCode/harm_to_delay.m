@@ -2,7 +2,8 @@
 %omega_probe in respect to the delay (parallel polarization)
 clear all;
 %physical constants
-q = -1.60217662e-19;
+c = 299792458;
+q = 1.60217662e-19;
 me = 9.10938e-31;
 n0 = 2.2e28;                                     %molecular density for si02
 
@@ -18,34 +19,29 @@ wavelength_pump = 2100e-9;
 % FWHM in terms of intensity 
 fwhm_pump = 140e-15;
 fwhm_probe = 45e-15;
-%adk0 = 25965409784120.4;
-%adk0 = 8.540703969149006e+12;
-%adk0 = Gamma_ADK(bandgap*(-q), amplitude_pump + amplitude_probe, 1, 0, 0);
 
 %integration parameters
 t_end = 1000e-15;
 delta_t = 5e-18;
 t = 0:delta_t:t_end;
-%n = 400000;
-%t = linspace(0, t_end, n);
-%delta_t = t_end/(n-1);
 
 %delay times
-delay_between_pulses = linspace(-80e-15, 80e-15, 40);
-tau_pump = ones(1, 40) * 500e-15;
+delay_between_pulses = linspace(-200e-15, 200e-15, 70); %80
+tau_pump = ones(1, 70) * 500e-15;
 tau_probe = tau_pump + delay_between_pulses;
 
 %allocate memory for first harmonic
 L = length(t);
 n_fft = 2^nextpow2(L); %zero padding
 power_density_harmonic = zeros(length(delay_between_pulses), n_fft/2 + 1);
+power_kerr_harmonic = zeros(length(delay_between_pulses), n_fft/2 + 1);
+power_injection_harmonic = zeros(length(delay_between_pulses), n_fft/2 + 1);
 
 for i = 1:length(delay_between_pulses)
     e_field_pump = gaussian_efield_new(amplitude_pump, wavelength_pump, fwhm_pump, tau_pump(i), t);
     e_field_probe = gaussian_efield_new(amplitude_probe, wavelength_probe, fwhm_probe, tau_probe(i), t);
     e_field = e_field_pump + e_field_probe;
-    displacements_x = displacement_x_new(bandgap, max(e_field), e_field);
-    %ADK = ADK_rate_new(adk0, e_field);
+    displacements_x = displacement_x_new(bandgap, abs(e_field) + 1, e_field);
     ADK = tangent_Gamma_ADK(e_field, bandgap);
     
     rho_sfi = integrate_population_cb(ADK, delta_t, t);
@@ -63,8 +59,47 @@ for i = 1:length(delay_between_pulses)
     ft_injection_current = fft(injection_current_density, n_fft);
     ft_kerr_current = fft(kerr, n_fft); 
     ft_overall_current = fft(overall_current_density, n_fft);
+    
+    kerr_power_spec = abs(ft_kerr_current/n_fft).^2;
+    injection_power_spec = abs(ft_injection_current/n_fft).^2;
     whole_power_spec = abs(ft_overall_current/n_fft).^2;    
+    power_injection_harmonic(i,:) = injection_power_spec(1:n_fft/2 + 1);
+    power_kerr_harmonic(i,:) = kerr_power_spec(1:n_fft/2 + 1);
     power_density_harmonic(i,:) = whole_power_spec(1:n_fft/2 + 1);
 end
 log_power_spec = log(power_density_harmonic);
-imagesc(log_power_spec, [118 130]);
+log_kerr_spec = log(power_kerr_harmonic);
+log_injection_spec = log(power_injection_harmonic);
+f = 1/delta_t*(0:(n_fft/2))/n_fft;
+delta_f = 1/delta_t;
+f_pump = c / 2.1e-06;
+f_probe = c / 8e-07;
+first_harm = 2*f_pump + f_probe;
+[~, idx] = min(abs(first_harm - f));
+[~, idx_pump] = min(abs(f_pump - f));
+[~, idx_probe] = min(abs(f_probe - f));
+
+subplot(1,3,1);
+imagesc(log_power_spec, [111, 120]);
+hold on
+title('Overall')
+xline(idx, 'w-');
+xline(idx_pump, 'w-.');
+xline(idx_probe, 'w--');
+xlim([idx-40,idx+40]);
+subplot(1,3,2);
+imagesc(log_kerr_spec, [111, 120]);
+hold on
+title('Kerr')
+xline(idx, 'w-');
+xline(idx_pump, 'w-.');
+xline(idx_probe, 'w--');
+xlim([idx-40,idx+40]);
+subplot(1,3,3);
+imagesc(log_injection_spec, [111, 120]);
+hold on
+title('Injection')
+xline(idx, 'w-');
+xline(idx_pump, 'w-.');
+xline(idx_probe, 'w--');
+xlim([idx-40,idx+40]);
