@@ -4,6 +4,7 @@ q = -1.60217662e-19;
 me = 0.635 * 9.10938e-31;
 n0 = 2.2e28; %molecular density for si02
 c = 299792458;
+bandgaps = [7.5];
 
 %simualtion parameters 
 %amplitude_probe= intensity2amplitude(0.015e16); %0.015 TWcm^-2
@@ -12,8 +13,7 @@ amplitude_pump = intensity2amplitude(12e16); %12 TWcm^-2
 amplitude_sum = amplitude_pump + amplitude_probe;
 wavelength_probe = 800e-9;
 wavelength_pump = 2100e-9;
-%adk0 = 25965409784120.4;
-adk0 = 8.540703969149006e+12;
+
 t_end = 1000e-15;
 delta_t = 5e-18;
 t = 0:delta_t:t_end;
@@ -27,7 +27,7 @@ e_field_pump = gaussian_efield_new(amplitude_pump, wavelength_pump, 140e-15, tau
 e_field_probe = gaussian_efield_new(amplitude_probe, wavelength_probe, 45e-15, tau_probe, t);
 e_field = e_field_pump + e_field_probe;
 displacements_x = displacement_x_new(7.5, max(e_field), e_field);
-ADK = ADK_rate_new(adk0, e_field);
+ADK = tangent_Gamma_ADK(e_field, bandgaps);
 
 rho_sfi = integrate_population_cb(ADK, delta_t, t);
 
@@ -43,7 +43,7 @@ overall_current_density = plasma_current_density + kerr ;
 
 figure()
 %plot(t - tau_pump, e_field_pump.^2./max(e_field_pump.^2) .* max(rho_sfi),'.');
-plot(t-tau_pump, adk0*(abs(e_field)./max(e_field)).^(13) ./max(adk0*(abs(e_field)./max(e_field)).^(13)))
+plot(t-tau_pump, ADK./max(ADK))
 hold on 
 plot(t - tau_pump, e_field_probe.^2./max(e_field_probe.^2) .* max(rho_sfi), '-.');
 hold on

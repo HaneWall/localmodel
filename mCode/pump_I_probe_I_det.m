@@ -1,6 +1,7 @@
 % script parallel pump/probe polarization
 % E1 = [E_probe, 0, 0], E2 = [0, E_pump, 0], Detector=[0, 1, 0]
 clear all;
+c = 299792458;
 q = -1.60217662e-19;
 me = 9.10938e-31;
 n0 = 2.2e28; 
@@ -16,7 +17,7 @@ t = 0:delta_t:t_end;
 L = length(t);
 
 %varying pump intensities 
-no_simulations = 30;
+no_simulations = 20;
 injection_first_harm = zeros(length(bandgaps),no_simulations);
 brunel_first_harm = zeros(length(bandgaps),no_simulations);
 kerr_first_harm = zeros(length(bandgaps),no_simulations);
@@ -38,8 +39,8 @@ e_field_probe(1,:) = gaussian_efield_new(amplitude_probe, wavelength_probe, 45e-
 n_fft = 2^nextpow2(L); %zero padding
 f = 1/delta_t*(0:(n_fft/2))/n_fft;
 delta_f = 1/delta_t;
-f_pump = physconst('lightspeed') / 2.1e-06;
-f_probe = physconst('lightspeed') / 8e-07;
+f_pump = c ./ 2.1e-06;
+f_probe = c ./ 8e-07;
 first_harm = 2*f_pump + f_probe;
 [~, idx] = min(abs(first_harm - f));
 [~, idx_pump] = min(abs(f_pump - f));
@@ -54,7 +55,7 @@ for b = 1:length(bandgaps)
         for j = 1:L
             normed_e_field(:,j) = norm(e_field(:,j));
         end
-        ADK = ADK_rate_new(adk0, normed_e_field);
+        ADK = tangent_Gamma_ADK(normed_e_field, bandgaps);
         rho_sfi = integrate_population_cb(ADK, delta_t, t);
         drho = cent_diff_n(rho_sfi, delta_t, 3);
         third_term(2,:) = cent_diff_n(displacements_x(2,:).*drho, delta_t, 3);

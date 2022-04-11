@@ -1,14 +1,14 @@
 % script parallel pump/probe polarization
 % E1 = [E_probe, 0, 0], E2 = [E_pump, 0, 0], Detector=[1, 0, 0]
 clear all;
+c = 299792458;
 q = -1.60217662e-19;
 me = 9.10938e-31;
 n0 = 2.2e28; 
-bandgaps = [7.5]; %in eV TODO: multiple bandgaps --> multiple adk0
+bandgaps = [7.5];
 wavelength_probe = 800e-9;
 wavelength_pump = 2100e-9;
-adk0 = 8.540703969149006e+12;
-c = 299792458;
+
 
 % integration params
 t_end = 1000e-15;
@@ -56,7 +56,7 @@ for b = 1:length(bandgaps)
             normed_e_field(:,j) = norm(e_field(:,j));
         end
 
-        ADK = ADK_rate_new(adk0, normed_e_field);
+        ADK = tangent_Gamma_ADK(normed_e_field, 7.5);
         rho_sfi = integrate_population_cb(ADK, delta_t, t);
         drho = cent_diff_n(rho_sfi, delta_t, 3);
         third_term(1,:) = cent_diff_n(displacements_x(1,:).*drho, delta_t, 3);
