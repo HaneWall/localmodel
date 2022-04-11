@@ -26,8 +26,8 @@ delta_t = 5e-18;
 t = 0:delta_t:t_end;
 
 %delay times
-delay_between_pulses = linspace(-200e-15, 200e-15, 70); %80
-tau_pump = ones(1, 70) * 500e-15;
+delay_between_pulses = linspace(-200e-15, 200e-15, 100); %80
+tau_pump = ones(1, 100) * 500e-15;
 tau_probe = tau_pump + delay_between_pulses;
 
 %allocate memory for first harmonic
@@ -36,6 +36,12 @@ n_fft = 2^nextpow2(L); %zero padding
 power_density_harmonic = zeros(length(delay_between_pulses), n_fft/2 + 1);
 power_kerr_harmonic = zeros(length(delay_between_pulses), n_fft/2 + 1);
 power_injection_harmonic = zeros(length(delay_between_pulses), n_fft/2 + 1);
+power_brunel_harmonic = zeros(length(delay_between_pulses), n_fft/2 + 1);
+
+phase_density_harmonic = zeros(length(delay_between_pulses), n_fft/2 + 1);
+phase_kerr_harmonic = zeros(length(delay_between_pulses), n_fft/2 + 1);
+phase_injection_harmonic = zeros(length(delay_between_pulses), n_fft/2 + 1);
+phase_brunel_harmonic = zeros(length(delay_between_pulses), n_fft/2 + 1);
 
 for i = 1:length(delay_between_pulses)
     e_field_pump = gaussian_efield_new(amplitude_pump, wavelength_pump, fwhm_pump, tau_pump(i), t);
@@ -62,14 +68,28 @@ for i = 1:length(delay_between_pulses)
     
     kerr_power_spec = abs(ft_kerr_current/n_fft).^2;
     injection_power_spec = abs(ft_injection_current/n_fft).^2;
-    whole_power_spec = abs(ft_overall_current/n_fft).^2;    
+    whole_power_spec = abs(ft_overall_current/n_fft).^2;
+    brunel_power_spec = abs(ft_brunel_current/n_fft).^2;
+    
+    brunel_phase_spec = angle(ft_brunel_current/n_fft);
+    injection_phase_spec = angle(ft_injection_current/n_fft);
+    kerr_phase_spec = angle(ft_kerr_current/n_fft);
+    overall_phase_spec = angle(ft_overall_current/n_fft);
+
     power_injection_harmonic(i,:) = injection_power_spec(1:n_fft/2 + 1);
     power_kerr_harmonic(i,:) = kerr_power_spec(1:n_fft/2 + 1);
     power_density_harmonic(i,:) = whole_power_spec(1:n_fft/2 + 1);
+    power_brunel_harmonic(i,:) = brunel_power_spec(1:n_fft/2 + 1);
+
+    phase_injection_harmonic(i,:) = injection_phase_spec(1:n_fft/2 + 1);
+    phase_kerr_harmonic(i,:) = kerr_phase_spec(1:n_fft/2 + 1);
+    phase_density_harmonic(i,:) = overall_phase_spec(1:n_fft/2 + 1);
+    phase_brunel_harmonic(i,:) = brunel_phase_spec(1:n_fft/2 + 1);
 end
 log_power_spec = log(power_density_harmonic);
 log_kerr_spec = log(power_kerr_harmonic);
 log_injection_spec = log(power_injection_harmonic);
+log_brunel_spec = log(power_brunel_harmonic);
 f = 1/delta_t*(0:(n_fft/2))/n_fft;
 delta_f = 1/delta_t;
 f_pump = c / 2.1e-06;
@@ -79,7 +99,7 @@ first_harm = 2*f_pump + f_probe;
 [~, idx_pump] = min(abs(f_pump - f));
 [~, idx_probe] = min(abs(f_probe - f));
 
-subplot(1,3,1);
+subplot(2,4,1);
 imagesc(log_power_spec, [111, 120]);
 hold on
 title('Overall')
@@ -87,7 +107,8 @@ xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
 xlim([idx-40,idx+40]);
-subplot(1,3,2);
+
+subplot(2,4,2);
 imagesc(log_kerr_spec, [111, 120]);
 hold on
 title('Kerr')
@@ -95,10 +116,60 @@ xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
 xlim([idx-40,idx+40]);
-subplot(1,3,3);
+
+subplot(2,4,3);
 imagesc(log_injection_spec, [111, 120]);
 hold on
 title('Injection')
+xline(idx, 'w-');
+xline(idx_pump, 'w-.');
+xline(idx_probe, 'w--');
+xlim([idx-40,idx+40]);
+
+subplot(2,4,4);
+imagesc(log_brunel_spec, [111, 120]);
+hold on
+title('Brunel')
+xline(idx, 'w-');
+xline(idx_pump, 'w-.');
+xline(idx_probe, 'w--');
+xlim([idx-40,idx+40]);
+
+subplot(2,4,5);
+imagesc(phase_density_harmonic);
+colormap jet
+hold on
+title('Overall')
+xline(idx, 'w-');
+xline(idx_pump, 'w-.');
+xline(idx_probe, 'w--');
+xlim([idx-40,idx+40]);
+
+subplot(2,4,6);
+imagesc(phase_kerr_harmonic);
+colormap jet
+hold on
+title('Kerr')
+xline(idx, 'w-');
+xline(idx_pump, 'w-.');
+xline(idx_probe, 'w--');
+xlim([idx-40,idx+40]);
+
+subplot(2,4,7);
+imagesc(phase_injection_harmonic);
+colormap jet
+hold on
+title('Injection')
+xline(idx, 'w-');
+xline(idx_pump, 'w-.');
+xline(idx_probe, 'w--');
+xlim([idx-40,idx+40]);
+
+subplot(2,4,8);
+imagesc(phase_brunel_harmonic);
+colormap jet
+hold on
+title('Brunel')
 xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
