@@ -61,7 +61,8 @@ for b = 1:length(bandgaps)
         third_term(1,:) = cent_diff_n(displacements_x(1,:).*drho, delta_t, 3);
         v0 = 0;
         brunel_current_density = n0 * q * q/me * e_field.*rho_sfi;
-        kerr = kerr_current_density_vec(e_field_pump, e_field_probe, delta_t); 
+        %kerr = kerr_current_density_vec(e_field_pump, e_field_probe, delta_t); 
+        kerr = kerr_current_binomial(e_field_pump, e_field_probe, delta_t);
         injection_current_density =  n0 .* q .* third_term; 
         overall_current_x = brunel_current_density(1,:) + kerr(1,:) + injection_current_density(1,:);
 
