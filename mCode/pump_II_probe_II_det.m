@@ -9,7 +9,6 @@ bandgaps = [7.5];
 wavelength_probe = 800e-9;
 wavelength_pump = 2100e-9;
 
-
 % integration params
 t_end = 1000e-15;
 delta_t = 5e-18;
@@ -34,7 +33,7 @@ e_field_probe = zeros(3, L);
 e_field_pump = zeros(3, L);
 third_term = zeros(3, L);
 e_field_probe(1,:) = gaussian_efield_new(amplitude_probe, wavelength_probe, 45e-15, tau_probe, t);
-
+normed_e_field = zeros(1, L);
 
 n_fft = 2^nextpow2(L); %zero padding
 f = 1/delta_t*(0:(n_fft/2))/n_fft;
@@ -56,7 +55,7 @@ for b = 1:length(bandgaps)
             normed_e_field(:,j) = norm(e_field(:,j));
         end
 
-        ADK = tangent_Gamma_ADK(normed_e_field, 7.5);
+        ADK = tangent_Gamma_ADK(normed_e_field, bandgaps);
         rho_sfi = integrate_population_cb(ADK, delta_t, t);
         drho = cent_diff_n(rho_sfi, delta_t, 3);
         third_term(1,:) = cent_diff_n(displacements_x(1,:).*drho, delta_t, 3);

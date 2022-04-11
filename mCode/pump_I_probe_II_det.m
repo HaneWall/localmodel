@@ -33,6 +33,7 @@ amplitude_pump = intensity2amplitude(e_pump_ranges);
 e_field_probe = zeros(3, L);
 e_field_pump = zeros(3, L);
 third_term = zeros(3, L);
+normed_e_field = zeros(1, L);
 e_field_probe(1,:) = gaussian_efield_new(amplitude_probe, wavelength_probe, 45e-15, tau_probe, t);
 
 
