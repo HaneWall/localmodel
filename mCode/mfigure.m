@@ -10,14 +10,15 @@ load("perpe_injection.mat", "perpe_injection");
 load("perpe_overall.mat", "perpe_overall");
 
 %load("intensity_ranges.mat", "e_pump_ranges")
-e_pump_ranges = linspace(3e16, 18e16, 20);
+i_pump_ranges = linspace(3e16, 18e16, 20);
 
 m = sqrt(parall_overall./perpe_overall);
-plot(e_pump_ranges, m)
+plot(i_pump_ranges, m)
 hold on 
-plot(e_pump_ranges, sqrt(parall_kerr./perpe_kerr))
-plot(e_pump_ranges, sqrt((parall_kerr + parall_brunel)./(perpe_kerr + perpe_brunel)))
+plot(i_pump_ranges, sqrt(parall_kerr./perpe_kerr))
+plot(i_pump_ranges, sqrt((parall_kerr + parall_brunel)./(perpe_kerr + perpe_brunel)))
+plot(i_pump_ranges, sqrt((parall_kerr + parall_brunel + parall_injection)./(perpe_kerr + perpe_brunel + perpe_injection)))
 xlabel('I_{pump} in W/m^2', 'interpreter', 'tex')
 ylabel('$$m = \sqrt{I_{\mid\mid}/I_{\perp}}$$', 'Interpreter','latex')
 title('$$E_{Gap}=7.5 eV , \Delta t = 5e-18s, \tau_{delay} = 0$$', 'Interpreter','latex')
-legend('Kerr+Brunel+Injection', 'Kerr', 'Kerr+Brunel')
+legend('m', 'Kerr', 'Kerr+Brunel', 'Kerr+Brunel+Injection')

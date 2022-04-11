@@ -50,11 +50,11 @@ for b = 1:length(bandgaps)
         amplitude_sum = amplitude_pump(i) + amplitude_probe;
         e_field_pump(1,:) = gaussian_efield_new(amplitude_pump(i), wavelength_pump, 140e-15, tau_pump, t);
         e_field = e_field_pump + e_field_probe;
-        displacements_x = displacement_x_new(bandgaps(b), max(max(e_field)), e_field);
         for j = 1:L
             normed_e_field(:,j) = norm(e_field(:,j));
         end
-
+        %displacements_x = displacement_x_new(bandgaps(b), max(max(e_field)), e_field);
+        displacements_x = displacement_x_new(bandgaps(b), max(normed_e_field), e_field);
         ADK = tangent_Gamma_ADK(normed_e_field, bandgaps);
         rho_sfi = integrate_population_cb(ADK, delta_t, t);
         drho = cent_diff_n(rho_sfi, delta_t, 3);
