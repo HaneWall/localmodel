@@ -22,7 +22,7 @@ fwhm_probe = 45e-15;
 
 %integration parameters
 t_end = 1000e-15;
-delta_t = 5e-18;
+delta_t = 3.8e-18;
 t = 0:delta_t:t_end;
 
 %delay times
@@ -99,43 +99,52 @@ first_harm = 2*f_pump + f_probe;
 [~, idx_pump] = min(abs(f_pump - f));
 [~, idx_probe] = min(abs(f_probe - f));
 
-subplot(2,4,1);
+subplot(3,4,[1, 2, 3, 4]);
 imagesc(log_power_spec, [111, 120]);
 hold on
 title('Overall')
 xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
-xlim([idx-40,idx+40]);
+xlim([0,idx+1500]);
 
-subplot(2,4,2);
+subplot(3,4,5);
+imagesc(log_power_spec, [111, 120]);
+hold on
+title('Overall')
+xline(idx, 'w-');
+xline(idx_pump, 'w-.');
+xline(idx_probe, 'w--');
+xlim([idx-60,idx+60]);
+
+subplot(3,4,6);
 imagesc(log_kerr_spec, [111, 120]);
 hold on
 title('Kerr')
 xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
-xlim([idx-40,idx+40]);
+xlim([idx-60,idx+60]);
 
-subplot(2,4,3);
+subplot(3,4,7);
 imagesc(log_injection_spec, [111, 120]);
 hold on
 title('Injection')
 xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
-xlim([idx-40,idx+40]);
+xlim([idx-60,idx+60]);
 
-subplot(2,4,4);
+subplot(3,4,8);
 imagesc(log_brunel_spec, [111, 120]);
 hold on
 title('Brunel')
 xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
-xlim([idx-40,idx+40]);
+xlim([idx-60,idx+60]);
 
-subplot(2,4,5);
+subplot(3,4,9);
 imagesc(phase_density_harmonic);
 colormap jet
 hold on
@@ -143,9 +152,9 @@ title('Overall')
 xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
-xlim([idx-40,idx+40]);
+xlim([idx-60,idx+60]);
 
-subplot(2,4,6);
+subplot(3,4,10);
 imagesc(phase_kerr_harmonic);
 colormap jet
 hold on
@@ -153,9 +162,9 @@ title('Kerr')
 xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
-xlim([idx-40,idx+40]);
+xlim([idx-60,idx+60]);
 
-subplot(2,4,7);
+subplot(3,4,11);
 imagesc(phase_injection_harmonic);
 colormap jet
 hold on
@@ -163,9 +172,9 @@ title('Injection')
 xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
-xlim([idx-40,idx+40]);
+xlim([idx-60,idx+60]);
 
-subplot(2,4,8);
+subplot(3,4,12);
 imagesc(phase_brunel_harmonic);
 colormap jet
 hold on
@@ -173,4 +182,6 @@ title('Brunel')
 xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
-xlim([idx-40,idx+40]);
+xlim([idx-60,idx+60]);
+
+%imagesc(mod(phase_kerr_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
