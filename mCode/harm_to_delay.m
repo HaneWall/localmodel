@@ -190,17 +190,17 @@ if phase_plot
     figure(2)
     subplot(1,3,1)
     imagesc(mod(phase_injection_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
-    xlim([idx + 2*idx_pump - 60, idx + 2*idx_pump + 60]);
+    xlim([idx - 60, idx + 60]);
     title('phase relation injection and brunel')
     colormap hsv
     subplot(1,3,2)
     imagesc(mod(phase_injection_harmonic - phase_kerr_harmonic + pi,2*pi) - pi)
-    xlim([idx + 2*idx_pump - 60, idx + 2*idx_pump + 60]);
+    xlim([idx - 60, idx + 60]);
     title('phase relation injection and kerr')
     colormap hsv
     subplot(1,3,3)
     imagesc(mod(phase_kerr_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
-    xlim([idx + 2*idx_pump - 60, idx + 2*idx_pump + 60]);
+    xlim([idx - 60, idx + 60]);
     title('phase relation kerr and brunel')
     colormap hsv
 end
