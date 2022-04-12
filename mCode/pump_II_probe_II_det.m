@@ -9,14 +9,22 @@ bandgaps = [7.5];
 wavelength_probe = 800e-9;
 wavelength_pump = 2100e-9;
 
+%simulation_options
+color_plot = true;
+save = false;
+relative_plot = false;
+ft_plot = false;
+intensity_plot = false;
+
+
 % integration params
 t_end = 1000e-15;
-delta_t = 1e-18;
+delta_t = 5e-18;
 t = 0:delta_t:t_end;
 L = length(t);
 
 %varying pump intensities 
-no_simulations = 20;
+no_simulations = 30;
 injection_first_harm = zeros(length(bandgaps),no_simulations);
 brunel_first_harm = zeros(length(bandgaps),no_simulations);
 kerr_first_harm = zeros(length(bandgaps),no_simulations);
@@ -44,6 +52,15 @@ first_harm = 2*f_pump + f_probe;
 [~, idx] = min(abs(first_harm - f));
 [~, idx_pump] = min(abs(f_pump - f));
 [~, idx_probe] = min(abs(f_probe - f));
+
+if color_plot
+    L = length(t);
+    n_fft = 2^nextpow2(L); %zero padding
+    power_density_harmonic = zeros(no_simulations, n_fft/2 + 1);
+    power_kerr_harmonic = zeros(no_simulations, n_fft/2 + 1);
+    power_injection_harmonic = zeros(no_simulations, n_fft/2 + 1);
+    power_brunel_harmonic = zeros(no_simulations, n_fft/2 + 1);
+end
 
 for b = 1:length(bandgaps)
     for i = 1:no_simulations
@@ -79,7 +96,16 @@ for b = 1:length(bandgaps)
         kerr_first_harm(b, i) = P_kerr_current(idx);
         injection_first_harm(b, i) = P_injection_current(idx);
         overall_along_x_harm(b, i) = P_overall_current(idx);
-        if i == 10
+        
+        if color_plot
+            power_injection_harmonic(i,:) = P_injection_current(1:n_fft/2 + 1);
+            power_kerr_harmonic(i,:) = P_kerr_current(1:n_fft/2 + 1);
+            power_density_harmonic(i,:) = P_overall_current(1:n_fft/2 + 1);
+            power_brunel_harmonic(i,:) = P_brunel_current(1:n_fft/2 + 1);
+        end
+        
+        
+        if i == 10 && ft_plot
             figure(1)
             semilogy(2*pi*f, P_overall_current(1:n_fft/2 + 1),'black');
             hold on
@@ -102,20 +128,59 @@ normed_brunel = brunel_first_harm./kerr_first_harm;
 normed_kerr = kerr_first_harm./kerr_first_harm;
 normed_injection = injection_first_harm./kerr_first_harm;
 
-figure(2)
-plot(e_pump_ranges, overall_along_x_harm(1,:))
+if intensity_plot
+    figure(2)
+    plot(e_pump_ranges, overall_along_x_harm(1,:))
+end
 
+if relative_plot
+    figure(3)
+    semilogy(e_pump_ranges, normed_kerr, 'black');
+    hold on
+    semilogy(e_pump_ranges, normed_brunel, 'b-.');
+    semilogy(e_pump_ranges, normed_injection, 'b-');
+end
 
-figure(3)
-semilogy(e_pump_ranges, normed_kerr, 'black');
-hold on
-semilogy(e_pump_ranges, normed_brunel, 'b-.');
-semilogy(e_pump_ranges, normed_injection, 'b-');
-parall_brunel = brunel_first_harm;
-parall_injection = injection_first_harm;
-parall_kerr = kerr_first_harm;
-parall_overall = overall_along_x_harm;
-save("parall_brunel", "parall_brunel");
-save("parall_injection", "parall_injection");
-save("parall_kerr", "parall_kerr");
-save("parall_overall", "parall_overall");
+if save
+    parall_brunel = brunel_first_harm;
+    parall_injection = injection_first_harm;
+    parall_kerr = kerr_first_harm;
+    parall_overall = overall_along_x_harm;
+    save("parall_brunel", "parall_brunel");
+    save("parall_injection", "parall_injection");
+    save("parall_kerr", "parall_kerr");
+    save("parall_overall", "parall_overall");
+end
+
+if color_plot
+    log_power_spec = log(power_density_harmonic);
+    log_kerr_spec = log(power_kerr_harmonic);
+    log_injection_spec = log(power_injection_harmonic);
+    log_brunel_spec = log(power_brunel_harmonic);
+    figure(4)
+    subplot(3,1,1);
+    imagesc(log_power_spec,[100, 130]);
+    colormap jet
+    hold on
+    title('Overall')
+    xline(idx, 'w-');
+    xline(idx_pump, 'w-.');
+    xline(idx_probe, 'w--');
+    xlim([0,idx+1500]);
+    subplot(3,1,2);
+    imagesc(log_kerr_spec, [100, 130]);
+    hold on
+    title('Kerr')
+    xline(idx, 'w-');
+    xline(idx_pump, 'w-.');
+    xline(idx_probe, 'w--');
+    xlim([0,idx+1500]);
+    subplot(3,1,3);
+    imagesc(log_injection_spec, [100, 130]);
+    hold on
+    title('Injection')
+    xline(idx, 'w-');
+    xline(idx_pump, 'w-.');
+    xline(idx_probe, 'w--');
+    xlim([0,idx+1500]);
+end

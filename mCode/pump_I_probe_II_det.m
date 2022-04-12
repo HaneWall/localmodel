@@ -11,7 +11,7 @@ wavelength_pump = 2100e-9;
 
 % integration params
 t_end = 1000e-15;
-delta_t = 1e-18;
+delta_t = 5e-18;
 t = 0:delta_t:t_end;
 L = length(t);
 

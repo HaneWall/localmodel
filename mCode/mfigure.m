@@ -20,4 +20,4 @@ plot(i_pump_ranges, sqrt((parall_kerr + parall_brunel)./(perpe_kerr + perpe_brun
 xlabel('I_{pump} in W/m^2', 'interpreter', 'tex')
 ylabel('$$m = \sqrt{I_{\mid\mid}/I_{\perp}}$$', 'Interpreter','latex')
 title('$$E_{Gap}=7.5 eV , \Delta t = 1e-18s, \tau_{delay} = 0$$', 'Interpreter','latex')
-legend('m', 'Kerr', 'Kerr+Brunel', 'Kerr+Brunel+Injection')
+legend('m', 'Kerr', 'Kerr+Brunel')
