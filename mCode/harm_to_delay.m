@@ -7,7 +7,8 @@ q = 1.60217662e-19;
 me = 9.10938e-31;
 n0 = 2.2e28;                                     %molecular density for si02
 
-phase_plot=true;
+phase_plot=false;
+hue_plot=true;
 
 %simulation parameters 
 bandgap = 7.5; % in eV
@@ -87,6 +88,7 @@ for i = 1:length(delay_between_pulses)
     phase_kerr_harmonic(i,:) = kerr_phase_spec(1:n_fft/2 + 1);
     phase_density_harmonic(i,:) = overall_phase_spec(1:n_fft/2 + 1);
     phase_brunel_harmonic(i,:) = brunel_phase_spec(1:n_fft/2 + 1);
+    
 end
 log_power_spec = log(power_density_harmonic);
 log_kerr_spec = log(power_kerr_harmonic);
@@ -203,4 +205,14 @@ if phase_plot
     xlim([idx - 60, idx + 60]);
     title('phase relation kerr and brunel')
     colormap hsv
+end
+
+if hue_plot
+    figure(3)
+    sub
+    overall_power = log(power_density_harmonic(:, 1:idx+100)) .* exp(1i .* phase_density_harmonic(:, 1:idx+100));
+    z_black_to_white_overall = mat2rgbCplx(overall_power, max(max(abs(overall_power)), 1));
+    imagesc(abs(overall_power), 'CData', z_black_to_white_overall)
+    xlim([idx - 60, idx + 60]);
+    title('overall')
 end
