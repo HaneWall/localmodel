@@ -9,6 +9,7 @@ n0 = 2.2e28;                                     %molecular density for si02
 
 phase_plot=true;
 hue_plot=false;
+delay_plot_all=true;
 
 %simulation parameters 
 bandgap = 7.5; % in eV
@@ -103,145 +104,151 @@ first_harm = 2*f_pump + f_probe;
 [~, idx_pump] = min(abs(f_pump - f));
 [~, idx_probe] = min(abs(f_probe - f));
 
-subplot(3,4,[1, 2, 3, 4]);
-imagesc(log_power_spec, [111, 120]);
-hold on
-title('Overall')
-xline(idx, 'w-');
-xline(idx_pump, 'w-.');
-xline(idx_probe, 'w--');
-xlim([0,idx+1500]);
-ax = gca;
-ax.YDir = 'normal';
 
-subplot(3,4,5);
-imagesc(log_power_spec, [111, 120]);
-hold on
-title('Overall')
-xline(idx, 'w-');
-xline(idx_pump, 'w-.');
-xline(idx_probe, 'w--');
-xlim([idx-60,idx+60]);
-ax = gca;
-ax.YDir = 'normal';
+if delay_plot_all
+    subplot(3,4,[1, 2, 3, 4]);
+    imagesc(f, delay_between_pulses, log_power_spec, [111, 120]);
+    hold on
+    title('Overall')
+    xline(f(idx), 'w-');
+    xline(f(idx_pump), 'w-.');
+    xline(f(idx_probe), 'w--');
+    xlim([0,f(idx+1500)]);
+    ax = gca;
+    ax.YDir = 'normal';
+    
+    subplot(3,4,5);
+    imagesc(f, delay_between_pulses, log_power_spec, [111, 120]);
+    hold on
+    title('Overall')
+    xline(f(idx), 'w-');
+    xline(f(idx_pump), 'w-.');
+    xline(f(idx_probe), 'w--');
+    xlim([0,f(idx+1500)]);
+    ax = gca;
+    ax.YDir = 'normal';
 
-subplot(3,4,6);
-imagesc(log_kerr_spec, [111, 120]);
-hold on
-title('Kerr')
-xline(idx, 'w-');
-xline(idx_pump, 'w-.');
-xline(idx_probe, 'w--');
-xlim([idx-60,idx+60]);
-ax = gca;
-ax.YDir = 'normal';
-
-subplot(3,4,7);
-imagesc(log_injection_spec, [111, 120]);
-hold on
-title('Injection')
-xline(idx, 'w-');
-xline(idx_pump, 'w-.');
-xline(idx_probe, 'w--');
-xlim([idx-60,idx+60]);
-ax = gca;
-ax.YDir = 'normal';
-
-
-subplot(3,4,8);
-imagesc(log_brunel_spec, [111, 120]);
-hold on
-title('Brunel')
-xline(idx, 'w-');
-xline(idx_pump, 'w-.');
-xline(idx_probe, 'w--');
-xlim([idx-60,idx+60]);
-ax = gca;
-ax.YDir = 'normal';
-
-subplot(3,4,9);
-imagesc(phase_density_harmonic);
-colormap jet
-hold on
-title('Overall')
-xline(idx, 'w-');
-xline(idx_pump, 'w-.');
-xline(idx_probe, 'w--');
-xlim([idx-60,idx+60]);
-ax = gca;
-ax.YDir = 'normal';
-
-subplot(3,4,10);
-imagesc(phase_kerr_harmonic);
-colormap jet
-hold on
-title('Kerr')
-xline(idx, 'w-');
-xline(idx_pump, 'w-.');
-xline(idx_probe, 'w--');
-xlim([idx-60,idx+60]);
-ax = gca;
-ax.YDir = 'normal';
-
-subplot(3,4,11);
-imagesc(phase_injection_harmonic);
-colormap jet
-hold on
-title('Injection')
-xline(idx, 'w-');
-xline(idx_pump, 'w-.');
-xline(idx_probe, 'w--');
-xlim([idx-60,idx+60]);
-ax = gca;
-ax.YDir = 'normal';
-
-subplot(3,4,12);
-imagesc(phase_brunel_harmonic);
-colormap jet
-hold on
-title('Brunel')
-xline(idx, 'w-');
-xline(idx_pump, 'w-.');
-xline(idx_probe, 'w--');
-xlim([idx-60,idx+60]);
-ax = gca;
-ax.YDir = 'normal';
+    subplot(3,4,6);
+    imagesc(f, delay_between_pulses, log_kerr_spec, [111, 120]);
+    hold on
+    title('Kerr')
+    xline(f(idx), 'w-');
+    xline(f(idx_pump), 'w-.');
+    xline(f(idx_probe), 'w--');
+    xlim([0,f(idx+1500)]);
+    ax = gca;
+    ax.YDir = 'normal';
+    
+    subplot(3,4,7);
+    imagesc(f, delay_between_pulses, log_injection_spec, [111, 120]);
+    hold on
+    title('Injection')
+    xline(f(idx), 'w-');
+    xline(f(idx_pump), 'w-.');
+    xline(f(idx_probe), 'w--');
+    xlim([0,f(idx+1500)]);
+    ax = gca;
+    ax.YDir = 'normal';
+    
+    
+    subplot(3,4,8);
+    imagesc(f, delay_between_pulses, log_brunel_spec, [111, 120]);
+    hold on
+    title('Brunel')
+    xline(f(idx), 'w-');
+    xline(f(idx_pump), 'w-.');
+    xline(f(idx_probe), 'w--');
+    xlim([0,f(idx+1500)]);
+    ax = gca;
+    ax.YDir = 'normal';
+    
+    subplot(3,4,9);
+    imagesc(f, delay_between_pulses, phase_density_harmonic);
+    colormap jet
+    hold on
+    title('Overall')
+    xline(f(idx), 'w-');
+    xline(f(idx_pump), 'w-.');
+    xline(f(idx_probe), 'w--');
+    xlim([0,f(idx+1500)]);
+    ax = gca;
+    ax.YDir = 'normal';
+    
+    subplot(3,4,10);
+    imagesc(f, delay_between_pulses, phase_kerr_harmonic);
+    colormap jet
+    hold on
+    title('Kerr')
+    xline(f(idx), 'w-');
+    xline(f(idx_pump), 'w-.');
+    xline(f(idx_probe), 'w--');
+    xlim([0,f(idx+1500)]);
+    ax = gca;
+    ax.YDir = 'normal';
+    
+    subplot(3,4,11);
+    imagesc(f, delay_between_pulses, phase_injection_harmonic);
+    colormap jet
+    hold on
+    title('Injection')
+    xline(f(idx), 'w-');
+    xline(f(idx_pump), 'w-.');
+    xline(f(idx_probe), 'w--');
+    xlim([0,f(idx+1500)]);
+    ax = gca;
+    ax.YDir = 'normal';
+    
+    subplot(3,4,12);
+    imagesc(f, delay_between_pulses, phase_brunel_harmonic);
+    colormap jet
+    hold on
+    title('Brunel')
+    xline(f(idx), 'w-');
+    xline(f(idx_pump), 'w-.');
+    xline(f(idx_probe), 'w--');
+    xlim([0,f(idx+1500)]);
+    ax = gca;
+    ax.YDir = 'normal';
+end
 
 if phase_plot
     figure(2)
     subplot(1,3,1)
-    imagesc(mod(phase_injection_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
+    imagesc(f, delay_between_pulses, mod(phase_injection_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
     cRange = caxis; % save the current color range
     hold on 
-    [M1,c1] = contour(log_power_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f, delay_between_pulses, log_power_spec, [111 113 115 117 119]);
     c1.LineColor = 'white';
     c1.LineWidth = 1;
     caxis(cRange)
-    xlim([idx - 60, idx + 60]);
+    xlim([f(idx - 60), f(idx + 60)]);
+    xline(f(idx), 'b-');
     title('phase relation injection and brunel')
     colormap hsv
     ax = gca;
     ax.YDir = 'normal';
     subplot(1,3,2)
-    imagesc(mod(phase_injection_harmonic - phase_kerr_harmonic + pi,2*pi) - pi)
+    imagesc(f, delay_between_pulses, mod(phase_injection_harmonic - phase_kerr_harmonic + pi,2*pi) - pi)
     hold on 
-    [M1,c1] = contour(log_power_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f, delay_between_pulses, log_power_spec, [111 113 115 117 119]);
     c1.LineColor = 'white';
     c1.LineWidth = 1;
     caxis(cRange)
-    xlim([idx - 60, idx + 60]);
+    xlim([f(idx - 60), f(idx + 60)]);
+    xline(f(idx), 'b-');
     title('phase relation injection and kerr')
     colormap hsv
     ax = gca;
     ax.YDir = 'normal';
     subplot(1,3,3)
-    imagesc(mod(phase_kerr_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
+    imagesc(f, delay_between_pulses, mod(phase_kerr_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
     hold on 
-    [M1,c1] = contour(log_power_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f, delay_between_pulses, log_power_spec, [111 113 115 117 119]);
     c1.LineColor = 'white';
     c1.LineWidth = 1;
     caxis(cRange)
-    xlim([idx - 60, idx + 60]);
+    xlim([f(idx - 60), f(idx + 60)]);
+    xline(f(idx), 'b-');
     title('phase relation kerr and brunel')
     colormap hsv
     ax = gca;
