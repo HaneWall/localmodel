@@ -7,9 +7,10 @@ q = 1.60217662e-19;
 me = 9.10938e-31;
 n0 = 2.2e28;                                     %molecular density for si02
 
-phase_plot=true;
+phase_plot=false;
 hue_plot=false;
 delay_plot_all=true;
+delay_filter_plot=true;
 
 %simulation parameters 
 bandgap = 7.5; % in eV
@@ -55,8 +56,10 @@ for i = 1:length(delay_between_pulses)
     ADK = tangent_Gamma_ADK(e_field, bandgap);
     
     rho_sfi = integrate_population_cb(ADK, delta_t, t);
-    drho = cent_diff_n(rho_sfi, delta_t, 3);
-    third_term = cent_diff_n(displacements_x.*drho, delta_t, 3);
+    drho = gradient(rho_sfi, delta_t);
+    %drho = cent_diff_n(rho_sfi, delta_t, 3);
+    %third_term = cent_diff_n(displacements_x.*drho, delta_t, 3);
+    third_term = gradient(displacements_x.*drho, delta_t);
     v0 = 0;
     plasma_current_density = n0 * q * (q/me * e_field.*rho_sfi + v0*drho + third_term);
     brunel_current_density = n0 * q * q/me * e_field.*rho_sfi;
@@ -104,22 +107,62 @@ first_harm = 2*f_pump + f_probe;
 [~, idx_pump] = min(abs(f_pump - f));
 [~, idx_probe] = min(abs(f_probe - f));
 
+if delay_filter_plot
+   %modify log power spec at each harmonic of omega pump 
+   figure(1)
+   idx_half_band = 55;
+   modified_log_spec = log_power_spec;
+   for i=0:7
+       modified_log_spec(:, (2*i+1)*idx_pump - idx_half_band:(2*i+1)*idx_pump + idx_half_band) = 110; 
+       modified_log_spec(:, (2*i+1)*idx_probe - idx_half_band:(2*i+1)*idx_probe + idx_half_band) = 110;
+   end
+    figure(4)
+    imagesc(f, delay_between_pulses.*10^(15), modified_log_spec, [110, 120]);
+    xlabel('Frequency f in 1/s','Interpreter','latex')
+    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    cRange = caxis; % save the current color range
+    hold on 
+    [M1,c1] = contour(f, delay_between_pulses.*10^(15), modified_log_spec, [111 113 115 117 119]);
+    c1.LineColor = 'black';
+    c1.LineWidth = 0.5;
+    caxis(cRange)
+    title('Overall')
+    xline(f(idx_pump), 'w-.');
+    xline(f(idx_probe), 'w--');
+    for i=1:5
+        xline(f(2*i*idx_pump + idx_probe), 'w-');
+    end
+    xlim([0,f(idx+3000)]);
+    ax = gca;
+    ax.YDir = 'normal';
+    colormap jet;
+end
 
 if delay_plot_all
+    figure(2)
     subplot(3,4,[1, 2, 3, 4]);
-    imagesc(f, delay_between_pulses, log_power_spec, [111, 120]);
-    hold on
+    imagesc(f, delay_between_pulses.*10^(15), log_power_spec, [111, 120]);
+    xlabel('Frequency f in 1/s','Interpreter','latex')
+    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
     title('Overall')
     xline(f(idx), 'w-');
     xline(f(idx_pump), 'w-.');
     xline(f(idx_probe), 'w--');
-    xlim([0,f(idx+1500)]);
+    xlim([0,f(idx+2500)]);
     ax = gca;
     ax.YDir = 'normal';
+    colormap jet;
     
     subplot(3,4,5);
-    imagesc(f, delay_between_pulses, log_power_spec, [111, 120]);
-    hold on
+    xlabel('Frequency f in 1/s','Interpreter','latex')
+    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    imagesc(f, delay_between_pulses.*10^(15), log_power_spec, [111, 120]);
+    cRange = caxis; % save the current color range
+    hold on 
+    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_power_spec, [111 113 115 117 119]);
+    c1.LineColor = 'black';
+    c1.LineWidth = 0.5;
+    caxis(cRange)
     title('Overall')
     xline(f(idx), 'w-');
     xline(f(idx_pump), 'w-.');
@@ -129,8 +172,15 @@ if delay_plot_all
     ax.YDir = 'normal';
 
     subplot(3,4,6);
-    imagesc(f, delay_between_pulses, log_kerr_spec, [111, 120]);
-    hold on
+    xlabel('Frequency f in 1/s','Interpreter','latex')
+    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    imagesc(f, delay_between_pulses.*10^(15), log_kerr_spec, [111, 120]);
+    cRange = caxis; % save the current color range
+    hold on 
+    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_kerr_spec, [111 113 115 117 119]);
+    c1.LineColor = 'black';
+    c1.LineWidth = 0.5;
+    caxis(cRange)
     title('Kerr')
     xline(f(idx), 'w-');
     xline(f(idx_pump), 'w-.');
@@ -140,8 +190,15 @@ if delay_plot_all
     ax.YDir = 'normal';
     
     subplot(3,4,7);
-    imagesc(f, delay_between_pulses, log_injection_spec, [111, 120]);
-    hold on
+    xlabel('Frequency f in 1/s','Interpreter','latex')
+    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    imagesc(f, delay_between_pulses.*10^(15), log_injection_spec, [111, 120]);
+    cRange = caxis; % save the current color range
+    hold on 
+    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_injection_spec, [111 113 115 117 119]);
+    c1.LineColor = 'black';
+    c1.LineWidth = 0.5;
+    caxis(cRange)
     title('Injection')
     xline(f(idx), 'w-');
     xline(f(idx_pump), 'w-.');
@@ -152,8 +209,15 @@ if delay_plot_all
     
     
     subplot(3,4,8);
-    imagesc(f, delay_between_pulses, log_brunel_spec, [111, 120]);
-    hold on
+    xlabel('Frequency f in 1/s','Interpreter','latex')
+    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    imagesc(f, delay_between_pulses.*10^(15), log_brunel_spec, [111, 120]);
+    cRange = caxis; % save the current color range
+    hold on 
+    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_brunel_spec, [111 113 115 117 119]);
+    c1.LineColor = 'black';
+    c1.LineWidth = 0.5;
+    caxis(cRange)
     title('Brunel')
     xline(f(idx), 'w-');
     xline(f(idx_pump), 'w-.');
@@ -163,7 +227,9 @@ if delay_plot_all
     ax.YDir = 'normal';
     
     subplot(3,4,9);
-    imagesc(f, delay_between_pulses, phase_density_harmonic);
+    xlabel('Frequency f in 1/s','Interpreter','latex')
+    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    imagesc(f, delay_between_pulses.*10^(15), phase_density_harmonic);
     colormap jet
     hold on
     title('Overall')
@@ -175,7 +241,9 @@ if delay_plot_all
     ax.YDir = 'normal';
     
     subplot(3,4,10);
-    imagesc(f, delay_between_pulses, phase_kerr_harmonic);
+    xlabel('Frequency f in 1/s','Interpreter','latex')
+    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    imagesc(f, delay_between_pulses.*10^(15), phase_kerr_harmonic);
     colormap jet
     hold on
     title('Kerr')
@@ -187,7 +255,9 @@ if delay_plot_all
     ax.YDir = 'normal';
     
     subplot(3,4,11);
-    imagesc(f, delay_between_pulses, phase_injection_harmonic);
+    xlabel('Frequency f in 1/s','Interpreter','latex')
+    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    imagesc(f, delay_between_pulses.*10^(15), phase_injection_harmonic);
     colormap jet
     hold on
     title('Injection')
@@ -199,7 +269,9 @@ if delay_plot_all
     ax.YDir = 'normal';
     
     subplot(3,4,12);
-    imagesc(f, delay_between_pulses, phase_brunel_harmonic);
+    xlabel('Frequency f in 1/s','Interpreter','latex')
+    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    imagesc(f, delay_between_pulses.*10^(15), phase_brunel_harmonic);
     colormap jet
     hold on
     title('Brunel')
@@ -212,12 +284,14 @@ if delay_plot_all
 end
 
 if phase_plot
-    figure(2)
-    subplot(1,3,1)
-    imagesc(f, delay_between_pulses, mod(phase_injection_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
+    figure(3)
+    subplot(2,3,1)
+    xlabel('Frequency f in 1/s','Interpreter','latex')
+    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    imagesc(f, delay_between_pulses.*10^(15), mod(phase_injection_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
     cRange = caxis; % save the current color range
     hold on 
-    [M1,c1] = contour(f, delay_between_pulses, log_power_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_power_spec, [111 113 115 117 119]);
     c1.LineColor = 'white';
     c1.LineWidth = 1;
     caxis(cRange)
@@ -227,10 +301,12 @@ if phase_plot
     colormap hsv
     ax = gca;
     ax.YDir = 'normal';
-    subplot(1,3,2)
-    imagesc(f, delay_between_pulses, mod(phase_injection_harmonic - phase_kerr_harmonic + pi,2*pi) - pi)
+    subplot(2,3,2)
+    xlabel('Frequency f in 1/s','Interpreter','latex')
+    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    imagesc(f, delay_between_pulses.*10^(15), mod(phase_injection_harmonic - phase_kerr_harmonic + pi,2*pi) - pi)
     hold on 
-    [M1,c1] = contour(f, delay_between_pulses, log_power_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_power_spec, [111 113 115 117 119]);
     c1.LineColor = 'white';
     c1.LineWidth = 1;
     caxis(cRange)
@@ -240,10 +316,12 @@ if phase_plot
     colormap hsv
     ax = gca;
     ax.YDir = 'normal';
-    subplot(1,3,3)
-    imagesc(f, delay_between_pulses, mod(phase_kerr_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
+    subplot(2,3,3)
+    xlabel('Frequency f in 1/s','Interpreter','latex')
+    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    imagesc(f, delay_between_pulses.*10^(15), mod(phase_kerr_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
     hold on 
-    [M1,c1] = contour(f, delay_between_pulses, log_power_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_power_spec, [111 113 115 117 119]);
     c1.LineColor = 'white';
     c1.LineWidth = 1;
     caxis(cRange)
@@ -253,10 +331,55 @@ if phase_plot
     colormap hsv
     ax = gca;
     ax.YDir = 'normal';
+    subplot(2,3,4)
+    xlabel('Frequency f in 1/s','Interpreter','latex')
+    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    imagesc(f, delay_between_pulses.*10^(15), mod(phase_density_harmonic - phase_kerr_harmonic + pi,2*pi) - pi)
+    hold on 
+    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_power_spec, [111 113 115 117 119]);
+    c1.LineColor = 'white';
+    c1.LineWidth = 1;
+    caxis(cRange)
+    xlim([f(idx - 60), f(idx + 60)]);
+    xline(f(idx), 'b-');
+    title('phase relation Harmonic and Kerr')
+    colormap hsv
+    ax = gca;
+    ax.YDir = 'normal';
+    subplot(2,3,5)
+    xlabel('Frequency f in 1/s','Interpreter','latex')
+    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    imagesc(f, delay_between_pulses.*10^(15), mod(phase_density_harmonic - phase_injection_harmonic + pi,2*pi) - pi)
+    hold on 
+    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_power_spec, [111 113 115 117 119]);
+    c1.LineColor = 'white';
+    c1.LineWidth = 1;
+    caxis(cRange)
+    xlim([f(idx - 60), f(idx + 60)]);
+    xline(f(idx), 'b-');
+    title('phase relation Harmonic and Injection')
+    colormap hsv
+    ax = gca;
+    ax.YDir = 'normal';
+    subplot(2,3,6)
+    xlabel('Frequency f in 1/s','Interpreter','latex')
+    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    imagesc(f, delay_between_pulses.*10^(15), mod(phase_density_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
+    hold on 
+    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_power_spec, [111 113 115 117 119]);
+    c1.LineColor = 'white';
+    c1.LineWidth = 1;
+    caxis(cRange)
+    xlim([f(idx - 60), f(idx + 60)]);
+    xline(f(idx), 'b-');
+    title('phase relation Harmonic and Brunel')
+    colormap hsv
+    ax = gca;
+    ax.YDir = 'normal';
 end
 
 if hue_plot
-    figure(3)
+    figure(4)
     overall_power = log(power_density_harmonic(:, 1:idx+100)) .* exp(1i .* phase_density_harmonic(:, 1:idx+100));
     z_black_to_white_overall = mat2rgbCplx(overall_power, max(max(abs(overall_power)), 1));
     imagesc(abs(overall_power), 'CData', z_black_to_white_overall)
