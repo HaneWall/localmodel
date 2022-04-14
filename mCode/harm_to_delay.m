@@ -7,8 +7,8 @@ q = 1.60217662e-19;
 me = 9.10938e-31;
 n0 = 2.2e28;                                     %molecular density for si02
 
-phase_plot=false;
-hue_plot=true;
+phase_plot=true;
+hue_plot=false;
 
 %simulation parameters 
 bandgap = 7.5; % in eV
@@ -111,6 +111,8 @@ xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
 xlim([0,idx+1500]);
+ax = gca;
+ax.YDir = 'normal';
 
 subplot(3,4,5);
 imagesc(log_power_spec, [111, 120]);
@@ -120,6 +122,8 @@ xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
 xlim([idx-60,idx+60]);
+ax = gca;
+ax.YDir = 'normal';
 
 subplot(3,4,6);
 imagesc(log_kerr_spec, [111, 120]);
@@ -129,6 +133,8 @@ xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
 xlim([idx-60,idx+60]);
+ax = gca;
+ax.YDir = 'normal';
 
 subplot(3,4,7);
 imagesc(log_injection_spec, [111, 120]);
@@ -138,6 +144,9 @@ xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
 xlim([idx-60,idx+60]);
+ax = gca;
+ax.YDir = 'normal';
+
 
 subplot(3,4,8);
 imagesc(log_brunel_spec, [111, 120]);
@@ -147,6 +156,8 @@ xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
 xlim([idx-60,idx+60]);
+ax = gca;
+ax.YDir = 'normal';
 
 subplot(3,4,9);
 imagesc(phase_density_harmonic);
@@ -157,6 +168,8 @@ xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
 xlim([idx-60,idx+60]);
+ax = gca;
+ax.YDir = 'normal';
 
 subplot(3,4,10);
 imagesc(phase_kerr_harmonic);
@@ -167,6 +180,8 @@ xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
 xlim([idx-60,idx+60]);
+ax = gca;
+ax.YDir = 'normal';
 
 subplot(3,4,11);
 imagesc(phase_injection_harmonic);
@@ -177,6 +192,8 @@ xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
 xlim([idx-60,idx+60]);
+ax = gca;
+ax.YDir = 'normal';
 
 subplot(3,4,12);
 imagesc(phase_brunel_harmonic);
@@ -187,32 +204,57 @@ xline(idx, 'w-');
 xline(idx_pump, 'w-.');
 xline(idx_probe, 'w--');
 xlim([idx-60,idx+60]);
+ax = gca;
+ax.YDir = 'normal';
 
 if phase_plot
     figure(2)
     subplot(1,3,1)
     imagesc(mod(phase_injection_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
+    cRange = caxis; % save the current color range
+    hold on 
+    [M1,c1] = contour(log_power_spec, [111 113 115 117 119]);
+    c1.LineColor = 'white';
+    c1.LineWidth = 1;
+    caxis(cRange)
     xlim([idx - 60, idx + 60]);
     title('phase relation injection and brunel')
     colormap hsv
+    ax = gca;
+    ax.YDir = 'normal';
     subplot(1,3,2)
     imagesc(mod(phase_injection_harmonic - phase_kerr_harmonic + pi,2*pi) - pi)
+    hold on 
+    [M1,c1] = contour(log_power_spec, [111 113 115 117 119]);
+    c1.LineColor = 'white';
+    c1.LineWidth = 1;
+    caxis(cRange)
     xlim([idx - 60, idx + 60]);
     title('phase relation injection and kerr')
     colormap hsv
+    ax = gca;
+    ax.YDir = 'normal';
     subplot(1,3,3)
     imagesc(mod(phase_kerr_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
+    hold on 
+    [M1,c1] = contour(log_power_spec, [111 113 115 117 119]);
+    c1.LineColor = 'white';
+    c1.LineWidth = 1;
+    caxis(cRange)
     xlim([idx - 60, idx + 60]);
     title('phase relation kerr and brunel')
     colormap hsv
+    ax = gca;
+    ax.YDir = 'normal';
 end
 
 if hue_plot
     figure(3)
-    sub
     overall_power = log(power_density_harmonic(:, 1:idx+100)) .* exp(1i .* phase_density_harmonic(:, 1:idx+100));
     z_black_to_white_overall = mat2rgbCplx(overall_power, max(max(abs(overall_power)), 1));
     imagesc(abs(overall_power), 'CData', z_black_to_white_overall)
     xlim([idx - 60, idx + 60]);
     title('overall')
+    ax = gca;
+    ax.YDir = 'normal';
 end
