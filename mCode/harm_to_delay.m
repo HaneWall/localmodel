@@ -124,7 +124,7 @@ if delay_plot_all
     xline(f(idx), 'w-');
     xline(f(idx_pump), 'w-.');
     xline(f(idx_probe), 'w--');
-    xlim([0,f(idx+1500)]);
+    xlim([f(idx - 60), f(idx + 60)]);
     ax = gca;
     ax.YDir = 'normal';
 
@@ -135,7 +135,7 @@ if delay_plot_all
     xline(f(idx), 'w-');
     xline(f(idx_pump), 'w-.');
     xline(f(idx_probe), 'w--');
-    xlim([0,f(idx+1500)]);
+    xlim([f(idx - 60), f(idx + 60)]);
     ax = gca;
     ax.YDir = 'normal';
     
@@ -146,7 +146,7 @@ if delay_plot_all
     xline(f(idx), 'w-');
     xline(f(idx_pump), 'w-.');
     xline(f(idx_probe), 'w--');
-    xlim([0,f(idx+1500)]);
+    xlim([f(idx - 60), f(idx + 60)]);
     ax = gca;
     ax.YDir = 'normal';
     
@@ -158,7 +158,7 @@ if delay_plot_all
     xline(f(idx), 'w-');
     xline(f(idx_pump), 'w-.');
     xline(f(idx_probe), 'w--');
-    xlim([0,f(idx+1500)]);
+    xlim([f(idx - 60), f(idx + 60)]);
     ax = gca;
     ax.YDir = 'normal';
     
@@ -170,7 +170,7 @@ if delay_plot_all
     xline(f(idx), 'w-');
     xline(f(idx_pump), 'w-.');
     xline(f(idx_probe), 'w--');
-    xlim([0,f(idx+1500)]);
+    xlim([f(idx - 60), f(idx + 60)]);
     ax = gca;
     ax.YDir = 'normal';
     
@@ -182,7 +182,7 @@ if delay_plot_all
     xline(f(idx), 'w-');
     xline(f(idx_pump), 'w-.');
     xline(f(idx_probe), 'w--');
-    xlim([0,f(idx+1500)]);
+    xlim([f(idx - 60), f(idx + 60)]);
     ax = gca;
     ax.YDir = 'normal';
     
@@ -194,7 +194,7 @@ if delay_plot_all
     xline(f(idx), 'w-');
     xline(f(idx_pump), 'w-.');
     xline(f(idx_probe), 'w--');
-    xlim([0,f(idx+1500)]);
+    xlim([f(idx - 60), f(idx + 60)]);
     ax = gca;
     ax.YDir = 'normal';
     
@@ -206,7 +206,7 @@ if delay_plot_all
     xline(f(idx), 'w-');
     xline(f(idx_pump), 'w-.');
     xline(f(idx_probe), 'w--');
-    xlim([0,f(idx+1500)]);
+    xlim([f(idx - 60), f(idx + 60)]);
     ax = gca;
     ax.YDir = 'normal';
 end
