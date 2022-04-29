@@ -10,8 +10,8 @@ function [der_current_density_vec] = kerr_current_binomial(efield_1, efield_2, d
     current_dens_vec = zeros(3, L);
     der_current_density_vec = zeros(3, L);
     for l=1:3
-        current_dens_vec(l,:) = cent_diff_n(p(l,:), delta_t, 3);
-        der_current_density_vec(l,:) = cent_diff_n(current_dens_vec(l,:) , delta_t, 3);
+        current_dens_vec(l,:) = gradient(p(l,:), delta_t);
+        der_current_density_vec(l,:) = gradient(current_dens_vec(l,:) , delta_t);
     end
 end
 

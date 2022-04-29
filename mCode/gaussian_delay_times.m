@@ -32,8 +32,8 @@ ADK = tangent_Gamma_ADK(e_field, bandgaps);
 rho_sfi = integrate_population_cb(ADK, delta_t, t);
 
 %compute time derivative plasma current density 
-drho = cent_diff_n(rho_sfi, delta_t, 3);
-third_term = cent_diff_n(displacements_x.*drho, delta_t, 3);
+drho = gradient(rho_sfi, delta_t);
+third_term = gradient(displacements_x.*drho, delta_t);
 v0 = 0;
 plasma_current_density = n0 * q * (q/me * e_field.*rho_sfi + v0*drho+ third_term);
 brunel_current_density = n0 * q * q/me * e_field.*rho_sfi;
@@ -41,16 +41,6 @@ kerr = kerr_current_density(e_field, delta_t);
 injection_current_density =  n0 * q * third_term; 
 overall_current_density = plasma_current_density + kerr ;
 
-figure()
-%plot(t - tau_pump, e_field_pump.^2./max(e_field_pump.^2) .* max(rho_sfi),'.');
-plot(t-tau_pump, ADK./max(ADK))
-hold on 
-plot(t - tau_pump, e_field_probe.^2./max(e_field_probe.^2) .* max(rho_sfi), '-.');
-hold on
-plot(t - tau_pump, rho_sfi, '-');
-figure()
-plot(t, plasma_current_density);
-figure()
 L = length(t);
 n_fft = 2^nextpow2(L); %zero padding
 ft_plasma_current = fft(plasma_current_density,n_fft);
@@ -69,22 +59,44 @@ omegas = 2*pi.*f;
 omega_pump = 2*pi * c / 2.1e-06;
 omega_probe = 2*pi * c / 8e-07;
 lambdas = 2*pi * c ./omegas;
-semilogy(omegas,P_brunel_current(1:n_fft/2 + 1)/max(P_overall_current), 'red');
+
+figure(1);
+% Get the handle of figure(n).
+fig1_comps.fig = gcf;
+fig1_comps.t1 = tiledlayout(fig1_comps.fig, 1, 2);
+fig1_comps.n(1) = nexttile;
 hold on
-semilogy(omegas,P_injection_current(1:n_fft/2 + 1)/max(P_overall_current),'green');
+p1 = area(t - tau_pump, ADK./max(ADK).*max(rho_sfi));
+p2 = plot(t - tau_pump, rho_sfi, '-');
+xlim([-1e-13, 1e-13])
+fig1_comps.tile1.plotXLabel = xlabel('$$t-\tau_{delay}$$ in s');
+legend([p1, p2], '$$\Gamma$$', '$$\rho$$');
+set(p2, 'LineWidth', 1, 'Color', 'Blue');
+set(p1, 'FaceColor', 'red', 'FaceAlpha', 0.5, 'EdgeAlpha', 0);
+%STANDARDIZE_FIGURE(fig1_comps);
+
+%figure(2);
+%fig2_comps.fig = gcf;
+fig1_comps.n(2) = nexttile;
 hold on
-semilogy(omegas,P_kerr_current(1:n_fft/2 + 1)/max(P_overall_current),'blue');
-hold on
-semilogy(omegas,P_overall_current(1:n_fft/2 + 1)/max(P_overall_current), 'black');
+p3 = plot(omegas/omega_pump,log10(P_brunel_current(1:n_fft/2 + 1)/max(P_overall_current)));
+p4 = plot(omegas/omega_pump,log10(P_injection_current(1:n_fft/2 + 1)/max(P_overall_current)));
+p5 = plot(omegas/omega_pump,log10(P_kerr_current(1:n_fft/2 + 1)/max(P_overall_current)));
+p6 = plot(omegas/omega_pump,log10(P_overall_current(1:n_fft/2 + 1)/max(P_overall_current)));
 for k = 1:20
     %xline((2*k*omega_pump + omega_probe),'-');
-    xline(k*omega_pump, '-.');
+    xline(k, '-.');
     %xline(k*omega_probe, ':');
 end
-%legend({'Brunel','Injection', 'Kerr', 'Overall', 'harmonics', 'pump', 'probe'})
-legend({'Brunel','Injection', 'Kerr', 'Overall','pump'})
-xlabel('\omega in rad/s')
-ylabel('|FFT(\partial_t j)|^2')
+set(p3, 'LineWidth', 1);
+set(p4, 'LineWidth', 1);
+set(p5, 'LineWidth', 1);
+set(p6, 'LineWidth', 1);
+xlim([0, 12])
+legend([p3, p4, p5, p6],'Brunel','Injection', 'Kerr', 'Overall', 'location', 'southeast');
+fig1_comps.tile2.plotxLabel = xlabel('Harmonische');
+fig1_comps.tile2.plotyLabel = ylabel('$$\log_{10}|\mathcal{F}(\partial_t j)|^2$$');
+STANDARDIZE_FIGURE(fig1_comps);
 
 
 

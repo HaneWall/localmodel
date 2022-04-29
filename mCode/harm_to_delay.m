@@ -7,10 +7,10 @@ q = 1.60217662e-19;
 me = 9.10938e-31;
 n0 = 2.2e28;                                     %molecular density for si02
 
-phase_plot=false;
+phase_plot=true;
 hue_plot=false;
-delay_plot_all=true;
-delay_filter_plot=true;
+delay_plot_all=false;
+delay_filter_plot=false;
 
 %simulation parameters 
 bandgap = 7.5; % in eV
@@ -57,8 +57,6 @@ for i = 1:length(delay_between_pulses)
     
     rho_sfi = integrate_population_cb(ADK, delta_t, t);
     drho = gradient(rho_sfi, delta_t);
-    %drho = cent_diff_n(rho_sfi, delta_t, 3);
-    %third_term = cent_diff_n(displacements_x.*drho, delta_t, 3);
     third_term = gradient(displacements_x.*drho, delta_t);
     v0 = 0;
     plasma_current_density = n0 * q * (q/me * e_field.*rho_sfi + v0*drho + third_term);
@@ -94,10 +92,10 @@ for i = 1:length(delay_between_pulses)
     phase_brunel_harmonic(i,:) = brunel_phase_spec(1:n_fft/2 + 1);
     
 end
-log_power_spec = log(power_density_harmonic);
-log_kerr_spec = log(power_kerr_harmonic);
-log_injection_spec = log(power_injection_harmonic);
-log_brunel_spec = log(power_brunel_harmonic);
+log_power_spec = log10(power_density_harmonic);
+log_kerr_spec = log10(power_kerr_harmonic);
+log_injection_spec = log10(power_injection_harmonic);
+log_brunel_spec = log10(power_brunel_harmonic);
 f = 1/delta_t*(0:(n_fft/2))/n_fft;
 delta_f = 1/delta_t;
 f_pump = c / 2.1e-06;
@@ -109,273 +107,258 @@ first_harm = 2*f_pump + f_probe;
 
 if delay_filter_plot
    %modify log power spec at each harmonic of omega pump 
-   figure(1)
-   idx_half_band = 55;
-   modified_log_spec = log_power_spec;
-   for i=0:7
-       modified_log_spec(:, (2*i+1)*idx_pump - idx_half_band:(2*i+1)*idx_pump + idx_half_band) = 110; 
-       modified_log_spec(:, (2*i+1)*idx_probe - idx_half_band:(2*i+1)*idx_probe + idx_half_band) = 110;
-   end
-    figure(4)
-    imagesc(f, delay_between_pulses.*10^(15), modified_log_spec, [110, 120]);
-    xlabel('Frequency f in 1/s','Interpreter','latex')
-    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    idx_half_band = 55;
+    modified_log_spec = log_power_spec;
+    for i=0:7
+        modified_log_spec(:, (2*i+1)*idx_pump - idx_half_band:(2*i+1)*idx_pump + idx_half_band) = 30; 
+        modified_log_spec(:, (2*i+1)*idx_probe - idx_half_band:(2*i+1)*idx_probe + idx_half_band) = 30;
+    end
+    figure(6)
+    % Get the handle of figure(n).
+    fig1_comps.fig = gcf;
+    p1 = imagesc(f./f_pump, delay_between_pulses.*10^(15), modified_log_spec, [47.5, 52]);
+    fig1_comps.tile1.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
+    fig1_comps.tile1.plotYLabel = ylabel('$$\tau_{Delay}$$ in fs');
     cRange = caxis; % save the current color range
     hold on 
-    [M1,c1] = contour(f, delay_between_pulses.*10^(15), modified_log_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f/f_pump, delay_between_pulses.*10^(15), modified_log_spec, [49 50 51]);
     c1.LineColor = 'black';
     c1.LineWidth = 0.5;
     caxis(cRange)
     title('Overall')
-    xline(f(idx_pump), 'w-.');
-    xline(f(idx_probe), 'w--');
+    xline(f(idx_pump)/f_pump, 'w-.');
+    xline(f(idx_probe)/f_pump, 'w--');
     for i=1:5
-        xline(f(2*i*idx_pump + idx_probe), 'w-');
+        xline(f(2*i*idx_pump + idx_probe)/f_pump, 'w-');
     end
-    xlim([0,f(idx+3000)]);
+    xlim([0, 11] );
     ax = gca;
     ax.YDir = 'normal';
     colormap jet;
+    STANDARDIZE_FIGURE(fig1_comps);
 end
 
 if delay_plot_all
-    figure(2)
-    subplot(3,4,[1, 2, 3, 4]);
-    imagesc(f, delay_between_pulses.*10^(15), log_power_spec, [111, 120]);
-    xlabel('Frequency f in 1/s','Interpreter','latex')
-    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
+    figure(7)
+    % Get the handle of figure(n).
+    fig2_comps.fig = gcf;
+    imagesc(f./f_pump, delay_between_pulses.*10^(15), log_power_spec, [47.5, 52]);
+    fig2_comps.tile1.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
+    fig2_comps.tile1.plotYLabel = ylabel('$$\tau_{Delay}$$ in fs');
     title('Overall')
-    xline(f(idx), 'w-');
-    xline(f(idx_pump), 'w-.');
-    xline(f(idx_probe), 'w--');
-    xlim([0,f(idx+2500)]);
+    xline(f(idx)/f_pump, 'w-');
+    xline(f(idx_pump)/f_pump, 'w-.');
+    xline(f(idx_probe)/f_pump, 'w--');
+    xlim([0, 11]);
     ax = gca;
     ax.YDir = 'normal';
     colormap jet;
+    STANDARDIZE_FIGURE(fig2_comps);
     
-    subplot(3,4,5);
-    xlabel('Frequency f in 1/s','Interpreter','latex')
-    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
-    imagesc(f, delay_between_pulses.*10^(15), log_power_spec, [111, 120]);
+    figure(8);
+    fig3_comps.fig = gcf;
+    fig3_comps.t1 = tiledlayout(fig3_comps.fig, 1, 4);
+    fig3_comps.n(1) = nexttile;
+    imagesc(f/f_pump, delay_between_pulses.*10^(15), log_power_spec, [47.5, 52]);
+    colormap jet;
     cRange = caxis; % save the current color range
     hold on 
-    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_power_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f/f_pump, delay_between_pulses.*10^(15), log_power_spec, [49 50 51]);
     c1.LineColor = 'black';
     c1.LineWidth = 0.5;
     caxis(cRange)
     title('Overall')
-    xline(f(idx), 'w-');
-    xline(f(idx_pump), 'w-.');
-    xline(f(idx_probe), 'w--');
-    xlim([f(idx - 60), f(idx + 60)]);
+    xline(f(idx)/f_pump, 'w-');
+    xlim([f(idx - 60)/f_pump, f(idx + 60)/f_pump]);
     ax = gca;
     ax.YDir = 'normal';
+    fig3_comps.tile1.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
+    fig3_comps.tile1.plotYLabel = ylabel('$$\tau_{Delay}$$ in fs');
 
-    subplot(3,4,6);
-    xlabel('Frequency f in 1/s','Interpreter','latex')
-    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
-    imagesc(f, delay_between_pulses.*10^(15), log_kerr_spec, [111, 120]);
+    
+
+    %STANDARDIZE_FIGURE(fig3_comps);
+
+    fig3_comps.n(2) = nexttile;
+    fig3_comps.tile2.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
+    fig3_comps.tile2.plotYLabel = ylabel('$$\tau_{Delay}$$ in fs');
+    imagesc(f/f_pump, delay_between_pulses.*10^(15), log_kerr_spec, [47.5, 52]);
+    colormap jet;
     cRange = caxis; % save the current color range
     hold on 
-    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_kerr_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f/f_pump, delay_between_pulses.*10^(15), log_kerr_spec, [49 50 51]);
     c1.LineColor = 'black';
     c1.LineWidth = 0.5;
     caxis(cRange)
     title('Kerr')
-    xline(f(idx), 'w-');
-    xline(f(idx_pump), 'w-.');
-    xline(f(idx_probe), 'w--');
-    xlim([f(idx - 60), f(idx + 60)]);
+    xline(f(idx)/f_pump, 'w-');
+    xlim([f(idx - 60)/f_pump, f(idx + 60)/f_pump]);
     ax = gca;
     ax.YDir = 'normal';
+    fig3_comps.tile2.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
+    fig3_comps.tile2.plotYLabel = ylabel('$$\tau_{Delay}$$ in fs');
     
-    subplot(3,4,7);
-    xlabel('Frequency f in 1/s','Interpreter','latex')
-    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
-    imagesc(f, delay_between_pulses.*10^(15), log_injection_spec, [111, 120]);
+    fig3_comps.n(3) = nexttile;
+    imagesc(f/f_pump, delay_between_pulses.*10^(15), log_injection_spec, [47.5, 52]);
+    colormap jet;
     cRange = caxis; % save the current color range
     hold on 
-    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_injection_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f/f_pump, delay_between_pulses.*10^(15), log_injection_spec, [49 50 51]);
     c1.LineColor = 'black';
     c1.LineWidth = 0.5;
     caxis(cRange)
     title('Injection')
-    xline(f(idx), 'w-');
-    xline(f(idx_pump), 'w-.');
-    xline(f(idx_probe), 'w--');
-    xlim([f(idx - 60), f(idx + 60)]);
+    xline(f(idx)/f_pump, 'w-');
+    xlim([f(idx - 60)/f_pump, f(idx + 60)/f_pump]);
     ax = gca;
     ax.YDir = 'normal';
+    fig3_comps.tile3.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
+    fig3_comps.tile3.plotYLabel = ylabel('$$\tau_{Delay}$$ in fs');
     
     
-    subplot(3,4,8);
-    xlabel('Frequency f in 1/s','Interpreter','latex')
-    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
-    imagesc(f, delay_between_pulses.*10^(15), log_brunel_spec, [111, 120]);
+    fig3_comps.n(4) = nexttile;
+    imagesc(f/f_pump, delay_between_pulses.*10^(15), log_brunel_spec, [47.5, 52]);
+    colormap jet;
     cRange = caxis; % save the current color range
     hold on 
-    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_brunel_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f/f_pump, delay_between_pulses.*10^(15), log_brunel_spec, [49 50 51]);
     c1.LineColor = 'black';
     c1.LineWidth = 0.5;
+    colormap jet;
     caxis(cRange)
     title('Brunel')
-    xline(f(idx), 'w-');
-    xline(f(idx_pump), 'w-.');
-    xline(f(idx_probe), 'w--');
-    xlim([f(idx - 60), f(idx + 60)]);
+    xline(f(idx)/f_pump, 'w-');
+    xlim([f(idx - 60)/f_pump, f(idx + 60)/f_pump]);
     ax = gca;
     ax.YDir = 'normal';
-    
-    subplot(3,4,9);
-    xlabel('Frequency f in 1/s','Interpreter','latex')
-    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
-    imagesc(f, delay_between_pulses.*10^(15), phase_density_harmonic);
-    colormap jet
-    hold on
-    title('Overall')
-    xline(f(idx), 'w-');
-    xline(f(idx_pump), 'w-.');
-    xline(f(idx_probe), 'w--');
-    xlim([f(idx - 60), f(idx + 60)]);
-    ax = gca;
-    ax.YDir = 'normal';
-    
-    subplot(3,4,10);
-    xlabel('Frequency f in 1/s','Interpreter','latex')
-    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
-    imagesc(f, delay_between_pulses.*10^(15), phase_kerr_harmonic);
-    colormap jet
-    hold on
-    title('Kerr')
-    xline(f(idx), 'w-');
-    xline(f(idx_pump), 'w-.');
-    xline(f(idx_probe), 'w--');
-    xlim([f(idx - 60), f(idx + 60)]);
-    ax = gca;
-    ax.YDir = 'normal';
-    
-    subplot(3,4,11);
-    xlabel('Frequency f in 1/s','Interpreter','latex')
-    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
-    imagesc(f, delay_between_pulses.*10^(15), phase_injection_harmonic);
-    colormap jet
-    hold on
-    title('Injection')
-    xline(f(idx), 'w-');
-    xline(f(idx_pump), 'w-.');
-    xline(f(idx_probe), 'w--');
-    xlim([f(idx - 60), f(idx + 60)]);
-    ax = gca;
-    ax.YDir = 'normal';
-    
-    subplot(3,4,12);
-    xlabel('Frequency f in 1/s','Interpreter','latex')
-    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
-    imagesc(f, delay_between_pulses.*10^(15), phase_brunel_harmonic);
-    colormap jet
-    hold on
-    title('Brunel')
-    xline(f(idx), 'w-');
-    xline(f(idx_pump), 'w-.');
-    xline(f(idx_probe), 'w--');
-    xlim([f(idx - 60), f(idx + 60)]);
-    ax = gca;
-    ax.YDir = 'normal';
+    fig3_comps.tile4.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
+    fig3_comps.tile4.plotYLabel = ylabel('$$\tau_{Delay}$$ in fs');
+    STANDARDIZE_FIGURE(fig3_comps);
 end
 
 if phase_plot
-    figure(3)
-    subplot(2,3,1)
-    xlabel('Frequency f in 1/s','Interpreter','latex')
-    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
-    imagesc(f, delay_between_pulses.*10^(15), mod(phase_injection_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
+    figure(3);
+
+    fig4_comps.fig = gcf;
+    fig4_comps.t1 = tiledlayout(fig4_comps.fig, 1, 3);
+
+    fig4_comps.n(1) = nexttile;
+    imagesc(f/f_pump, delay_between_pulses.*10^(15), mod(phase_injection_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
+    colormap hsv;
     cRange = caxis; % save the current color range
     hold on 
-    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_power_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f/f_pump, delay_between_pulses.*10^(15), log_power_spec, [49 50 51]);
     c1.LineColor = 'white';
     c1.LineWidth = 1;
     caxis(cRange)
-    xlim([f(idx - 60), f(idx + 60)]);
-    xline(f(idx), 'b-');
-    title('phase relation injection and brunel')
-    colormap hsv
+    xlim([f(idx - 60)/f_pump, f(idx + 60)/f_pump]);
+    xline(f(idx)/f_pump, 'b-');
+    title('Phase zw. Injection & Brunel')
     ax = gca;
     ax.YDir = 'normal';
-    subplot(2,3,2)
-    xlabel('Frequency f in 1/s','Interpreter','latex')
-    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
-    imagesc(f, delay_between_pulses.*10^(15), mod(phase_injection_harmonic - phase_kerr_harmonic + pi,2*pi) - pi)
+    fig4_comps.tile1.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
+    fig4_comps.tile1.plotYLabel = ylabel('$$\tau_{Delay}$$ in fs');
+    
+    fig4_comps.n(2) = nexttile;
+    imagesc(f/f_pump, delay_between_pulses.*10^(15), mod(phase_injection_harmonic - phase_kerr_harmonic + pi,2*pi) - pi)
+    colormap hsv;
+    cRange = caxis; % save the current color range
     hold on 
-    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_power_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f/f_pump, delay_between_pulses.*10^(15), log_power_spec, [49 50 51]);
     c1.LineColor = 'white';
     c1.LineWidth = 1;
     caxis(cRange)
-    xlim([f(idx - 60), f(idx + 60)]);
-    xline(f(idx), 'b-');
-    title('phase relation injection and kerr')
-    colormap hsv
+    xlim([f(idx - 60)/f_pump, f(idx + 60)/f_pump]);
+    xline(f(idx)/f_pump, 'b-');
+    title('Phase zw. Injection & Kerr')
     ax = gca;
     ax.YDir = 'normal';
-    subplot(2,3,3)
-    xlabel('Frequency f in 1/s','Interpreter','latex')
-    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
-    imagesc(f, delay_between_pulses.*10^(15), mod(phase_kerr_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
+    fig4_comps.tile2.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
+    fig4_comps.tile2.plotYLabel = ylabel('$$\tau_{Delay}$$ in fs');
+
+    fig4_comps.n(3) = nexttile;
+    imagesc(f/f_pump, delay_between_pulses.*10^(15), mod(phase_brunel_harmonic - phase_kerr_harmonic + pi,2*pi) - pi)
+    colormap hsv;
+    cRange = caxis; % save the current color range
     hold on 
-    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_power_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f/f_pump, delay_between_pulses.*10^(15), log_power_spec, [49 50 51]);
     c1.LineColor = 'white';
     c1.LineWidth = 1;
     caxis(cRange)
-    xlim([f(idx - 60), f(idx + 60)]);
-    xline(f(idx), 'b-');
-    title('phase relation kerr and brunel')
-    colormap hsv
+    xlim([f(idx - 60)/f_pump, f(idx + 60)/f_pump]);
+    xline(f(idx)/f_pump, 'b-');
+    title('Phase zw. Brunel & Kerr')
     ax = gca;
     ax.YDir = 'normal';
-    subplot(2,3,4)
-    xlabel('Frequency f in 1/s','Interpreter','latex')
-    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
-    imagesc(f, delay_between_pulses.*10^(15), mod(phase_density_harmonic - phase_kerr_harmonic + pi,2*pi) - pi)
+    fig4_comps.tile3.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
+    fig4_comps.tile3.plotYLabel = ylabel('$$\tau_{Delay}$$ in fs');
+    cbh = colorbar;
+    cbh.Ticks = linspace(-pi, pi, 9);
+    cbh.TickLabels = {'$-\pi$', '$- 3/4 \pi$', '$-\pi/2$', '$-\pi/4$', '$0$', '$\pi/4$', '$\pi/2$', '$3/4\pi$', '$\pi$'};
+    cbh.TickLabelInterpreter = 'latex';
+    STANDARDIZE_FIGURE(fig4_comps);
+
+    figure(5);
+    fig5_comps.fig = gcf;
+    fig5_comps.t1 = tiledlayout(fig5_comps.fig, 1, 3);
+    
+    fig5_comps.n(1) = nexttile;
+
+    imagesc(f/f_pump, delay_between_pulses.*10^(15), mod(phase_density_harmonic - phase_kerr_harmonic + pi,2*pi) - pi)
+    colormap hsv;
+    cRange = caxis; % save the current color range
     hold on 
-    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_power_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f/f_pump, delay_between_pulses.*10^(15), log_power_spec, [49 50 51]);
     c1.LineColor = 'white';
     c1.LineWidth = 1;
     caxis(cRange)
-    xlim([f(idx - 60), f(idx + 60)]);
-    xline(f(idx), 'b-');
-    title('phase relation Harmonic and Kerr')
-    colormap hsv
+    xlim([f(idx - 60)/f_pump, f(idx + 60)/f_pump]);
+    xline(f(idx)/f_pump, 'b-');
+    title('Phase zw. Overall & Kerr')
     ax = gca;
     ax.YDir = 'normal';
-    subplot(2,3,5)
-    xlabel('Frequency f in 1/s','Interpreter','latex')
-    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
-    imagesc(f, delay_between_pulses.*10^(15), mod(phase_density_harmonic - phase_injection_harmonic + pi,2*pi) - pi)
+    fig5_comps.tile1.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
+    fig5_comps.tile1.plotYLabel = ylabel('$$\tau_{Delay}$$ in fs');
+    
+    fig5_comps.n(2) = nexttile;
+    imagesc(f/f_pump, delay_between_pulses.*10^(15), mod(phase_density_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
+    colormap hsv;
+    cRange = caxis; % save the current color range
     hold on 
-    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_power_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f/f_pump, delay_between_pulses.*10^(15), log_power_spec, [49 50 51]);
     c1.LineColor = 'white';
     c1.LineWidth = 1;
     caxis(cRange)
-    xlim([f(idx - 60), f(idx + 60)]);
-    xline(f(idx), 'b-');
-    title('phase relation Harmonic and Injection')
-    colormap hsv
+    xlim([f(idx - 60)/f_pump, f(idx + 60)/f_pump]);
+    xline(f(idx)/f_pump, 'b-');
+    title('Phase zw. Overall & Brunel')
     ax = gca;
     ax.YDir = 'normal';
-    subplot(2,3,6)
-    xlabel('Frequency f in 1/s','Interpreter','latex')
-    ylabel('$\tau_{Delay}$ in fs','Interpreter','latex')
-    imagesc(f, delay_between_pulses.*10^(15), mod(phase_density_harmonic - phase_brunel_harmonic + pi,2*pi) - pi)
+    fig5_comps.tile2.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
+    fig5_comps.tile2.plotYLabel = ylabel('$$\tau_{Delay}$$ in fs');
+
+    fig5_comps.n(3) = nexttile;
+    imagesc(f/f_pump, delay_between_pulses.*10^(15), mod(phase_density_harmonic - phase_injection_harmonic + pi,2*pi) - pi)
+    colormap hsv;
+    cRange = caxis; % save the current color range
     hold on 
-    [M1,c1] = contour(f, delay_between_pulses.*10^(15), log_power_spec, [111 113 115 117 119]);
+    [M1,c1] = contour(f/f_pump, delay_between_pulses.*10^(15), log_power_spec, [49 50 51]);
     c1.LineColor = 'white';
     c1.LineWidth = 1;
     caxis(cRange)
-    xlim([f(idx - 60), f(idx + 60)]);
-    xline(f(idx), 'b-');
-    title('phase relation Harmonic and Brunel')
-    colormap hsv
+    xlim([f(idx - 60)/f_pump, f(idx + 60)/f_pump]);
+    xline(f(idx)/f_pump, 'b-');
+    title('Phase zw. Overall & Injection')
     ax = gca;
     ax.YDir = 'normal';
+    fig5_comps.tile3.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
+    fig5_comps.tile3.plotYLabel = ylabel('$$\tau_{Delay}$$ in fs');
+    cbh = colorbar;
+    cbh.Ticks = linspace(-pi, pi, 9);
+    cbh.TickLabels = {'$-\pi$', '$- 3/4 \pi$', '$-\pi/2$', '$-\pi/4$', '$0$', '$\pi/4$', '$\pi/2$', '$3/4\pi$', '$\pi$'};
+    cbh.TickLabelInterpreter = 'latex';
+    STANDARDIZE_FIGURE(fig5_comps);
+
 end
 
 if hue_plot

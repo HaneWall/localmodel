@@ -24,7 +24,7 @@ t = 0:delta_t:t_end;
 L = length(t);
 
 %varying pump intensities 
-no_simulations = 30;
+no_simulations = 40;
 injection_first_harm = zeros(length(bandgaps),no_simulations);
 brunel_first_harm = zeros(length(bandgaps),no_simulations);
 kerr_first_harm = zeros(length(bandgaps),no_simulations);
@@ -75,8 +75,8 @@ for b = 1:length(bandgaps)
         displacements_x = displacement_x_new(bandgaps(b), normed_e_field + 1, e_field);
         ADK = tangent_Gamma_ADK(normed_e_field, bandgaps);
         rho_sfi = integrate_population_cb(ADK, delta_t, t);
-        drho = cent_diff_n(rho_sfi, delta_t, 3);
-        third_term(1,:) = cent_diff_n(displacements_x(1,:).*drho, delta_t, 3);
+        drho = gradient(rho_sfi, delta_t);
+        third_term(1,:) = gradient(displacements_x(1,:).*drho, delta_t);
         v0 = 0;
         brunel_current_density = n0 * q * q/me * e_field.*rho_sfi;
         %kerr = kerr_current_density_vec(e_field_pump, e_field_probe, delta_t); 
@@ -153,34 +153,55 @@ if save
 end
 
 if color_plot
-    log_power_spec = log(power_density_harmonic);
-    log_kerr_spec = log(power_kerr_harmonic);
-    log_injection_spec = log(power_injection_harmonic);
-    log_brunel_spec = log(power_brunel_harmonic);
-    figure(4)
-    subplot(3,1,1);
-    imagesc(log_power_spec,[100, 130]);
-    colormap jet
+    f_scaled = f./f_pump;
+    figure(1);
+    % Get the handle of figure(n).
+    fig1_comps.fig = gcf;
+    fig1_comps.t1 = tiledlayout(fig1_comps.fig, 3, 1);
+    fig1_comps.n(1) = nexttile;
     hold on
+    log_power_spec = log10(power_density_harmonic);
+    log_kerr_spec = log10(power_kerr_harmonic);
+    log_injection_spec = log10(power_injection_harmonic);
+    log_brunel_spec = log10(power_brunel_harmonic);
+    %figure(4)
+    %subplot(3,1,1);
+    p1=imagesc(f_scaled, e_pump_ranges, log_power_spec,[45, 57]);
+    set(gca,'YDir','normal')
+    colormap jet
+    
     title('Overall')
-    xline(idx, 'w-');
-    xline(idx_pump, 'w-.');
-    xline(idx_probe, 'w--');
-    xlim([0,idx+1500]);
-    subplot(3,1,2);
-    imagesc(log_kerr_spec, [100, 130]);
+    xline((f_probe + 2*f_pump)/f_pump, 'w-');
+    xline(1, 'w-.');
+    xline(f_probe/f_pump, 'w--');
+    xlim([0,10]);
+    ylim([e_pump_ranges(1), e_pump_ranges(end)])
+    %fig1_comps.tile1.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
+    fig1_comps.tile1.plotYLabel = ylabel('$$I_{pump}$$ in $$Wm^{-2}$$');
+
+    fig1_comps.n(2) = nexttile;
+    p2=imagesc(f_scaled, e_pump_ranges, log_kerr_spec, [45, 57]);
+    set(gca,'YDir','normal')
     hold on
     title('Kerr')
-    xline(idx, 'w-');
-    xline(idx_pump, 'w-.');
-    xline(idx_probe, 'w--');
-    xlim([0,idx+1500]);
-    subplot(3,1,3);
-    imagesc(log_injection_spec, [100, 130]);
+    xline((f_probe + 2*f_pump)/f_pump, 'w-');
+    xline(1, 'w-.');
+    xline(f_probe/f_pump, 'w--');
+    xlim([0,10]);
+    %fig1_comps.tile2.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
+    fig1_comps.tile2.plotYLabel = ylabel('$$I_{pump}$$ in $$Wm^{-2}$$');
+
+    fig1_comps.n(3) = nexttile;
+    p3=imagesc(f_scaled, e_pump_ranges, log_injection_spec, [45, 57]);
+    set(gca,'YDir','normal')
     hold on
     title('Injection')
-    xline(idx, 'w-');
-    xline(idx_pump, 'w-.');
-    xline(idx_probe, 'w--');
-    xlim([0,idx+1500]);
+    xline((f_probe + 2*f_pump)/f_pump, 'w-');
+    xline(1, 'w-.');
+    xline(f_probe/f_pump, 'w--');
+    xlim([0,10]);
+    fig1_comps.tile3.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
+    fig1_comps.tile3.plotYLabel = ylabel('$$I_{pump}$$ in $$Wm^{-2}$$');
+
+    STANDARDIZE_FIGURE(fig1_comps)
 end
