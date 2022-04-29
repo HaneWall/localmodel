@@ -7,10 +7,10 @@ q = 1.60217662e-19;
 me = 9.10938e-31;
 n0 = 2.2e28;                                     %molecular density for si02
 
-phase_plot=true;
+phase_plot=false;
 hue_plot=false;
 delay_plot_all=false;
-delay_filter_plot=false;
+delay_filter_plot=true;
 
 %simulation parameters 
 bandgap = 7.5; % in eV
