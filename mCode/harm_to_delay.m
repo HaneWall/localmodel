@@ -7,10 +7,10 @@ q = 1.60217662e-19;
 me = 9.10938e-31;
 n0 = 2.2e28;                                     %molecular density for si02
 
-phase_plot=false;
+phase_plot=true;
 hue_plot=false;
 delay_plot_all=false;
-delay_filter_plot=true;
+delay_filter_plot=false;
 
 %simulation parameters 
 bandgap = 7.5; % in eV
@@ -48,28 +48,41 @@ phase_kerr_harmonic = zeros(length(delay_between_pulses), n_fft/2 + 1);
 phase_injection_harmonic = zeros(length(delay_between_pulses), n_fft/2 + 1);
 phase_brunel_harmonic = zeros(length(delay_between_pulses), n_fft/2 + 1);
 
+ft_overall_current_pump_probe = zeros(length(delay_between_pulses), n_fft/2 + 1);
+overall_current_pump_probe = zeros(length(delay_between_pulses), L);
+
+e_field_probe = zeros(3, L);
+e_field_pump = zeros(3, L);
+third_term = zeros(3, L);
+normed_e_field = zeros(1, L);
+
 for i = 1:length(delay_between_pulses)
-    e_field_pump = gaussian_efield_new(amplitude_pump, wavelength_pump, fwhm_pump, tau_pump(i), t);
-    e_field_probe = gaussian_efield_new(amplitude_probe, wavelength_probe, fwhm_probe, tau_probe(i), t);
+    e_field_pump(1, :) = gaussian_efield_new(amplitude_pump, wavelength_pump, fwhm_pump, tau_pump(i), t);
+    e_field_probe(1, :) = gaussian_efield_new(amplitude_probe, wavelength_probe, fwhm_probe, tau_probe(i), t);
     e_field = e_field_pump + e_field_probe;
-    displacements_x = displacement_x_new(bandgap, abs(e_field) + 1, e_field);
-    ADK = tangent_Gamma_ADK(e_field, bandgap);
+    for j = 1:L
+        normed_e_field(:,j) = norm(e_field(:,j));
+    end
+    displacements_x = displacement_x_new(bandgap, abs(normed_e_field) + 1, e_field);
+    ADK = tangent_Gamma_ADK(normed_e_field, bandgap);
     
     rho_sfi = integrate_population_cb(ADK, delta_t, t);
     drho = gradient(rho_sfi, delta_t);
-    third_term = gradient(displacements_x.*drho, delta_t);
+    third_term(1, :) = gradient(displacements_x(1, :).*drho, delta_t);
     v0 = 0;
-    plasma_current_density = n0 * q * (q/me * e_field.*rho_sfi + v0*drho + third_term);
+    plasma_current_density = n0 .* q .* (q/me .* e_field.*rho_sfi + v0*drho + third_term);
     brunel_current_density = n0 * q * q/me * e_field.*rho_sfi;
-    kerr = kerr_current_density(e_field, delta_t);  
-    injection_current_density =  n0 * q * third_term; 
-    overall_current_density = plasma_current_density + kerr;
+    kerr = kerr_current_binomial(e_field_probe, e_field_pump, delta_t);  
+    injection_current_density =  n0 .* q .* third_term; 
+    overall_current_density = brunel_current_density(1,:) + kerr(1,:) + injection_current_density(1,:);
     
-    ft_plasma_current = fft(plasma_current_density,n_fft);
-    ft_brunel_current = fft(brunel_current_density, n_fft);
-    ft_injection_current = fft(injection_current_density, n_fft);
-    ft_kerr_current = fft(kerr, n_fft); 
-    ft_overall_current = fft(overall_current_density, n_fft);
+    ft_plasma_current = fft(plasma_current_density(1, :),n_fft);
+    ft_brunel_current = fft(brunel_current_density(1, :), n_fft);
+    ft_injection_current = fft(injection_current_density(1, :), n_fft);
+    ft_kerr_current = fft(kerr(1, :), n_fft); 
+    ft_overall_current = fft(overall_current_density(1, :), n_fft);
+    ft_overall_current_pump_probe(i, :) = ft_overall_current(1:n_fft/2 + 1);
+    overall_current_pump_probe(i, :) = overall_current_density(1, :);
     
     kerr_power_spec = abs(ft_kerr_current/n_fft).^2;
     injection_power_spec = abs(ft_injection_current/n_fft).^2;
@@ -107,14 +120,65 @@ first_harm = 2*f_pump + f_probe;
 
 if delay_filter_plot
    %modify log power spec at each harmonic of omega pump 
-    idx_half_band = 55;
-    modified_log_spec = log_power_spec;
-    for i=0:7
-        modified_log_spec(:, (2*i+1)*idx_pump - idx_half_band:(2*i+1)*idx_pump + idx_half_band) = 30; 
-        modified_log_spec(:, (2*i+1)*idx_probe - idx_half_band:(2*i+1)*idx_probe + idx_half_band) = 30;
+    %idx_half_band = 55;
+    power_density_harmonic_pump = zeros(length(delay_between_pulses), n_fft/2 + 1);
+    power_kerr_harmonic_pump = zeros(length(delay_between_pulses), n_fft/2 + 1);
+    power_injection_harmonic_pump = zeros(length(delay_between_pulses), n_fft/2 + 1);
+    power_brunel_harmonic_pump = zeros(length(delay_between_pulses), n_fft/2 + 1);
+
+    ft_overall_current_pump = zeros(length(delay_between_pulses), n_fft/2 + 1);
+    diff_overall_current = zeros(length(delay_between_pulses), L);
+
+    for i = 1:length(delay_between_pulses)
+        e_field_pump(1, :) = gaussian_efield_new(amplitude_pump, wavelength_pump, fwhm_pump, tau_pump(i), t);
+        e_field_probe(1, :) = zeros(1, length(t));
+        e_field = e_field_pump + e_field_probe;
+        for j = 1:L
+            normed_e_field(:,j) = norm(e_field(:,j));
+        end
+        displacements_x = displacement_x_new(bandgap, abs(normed_e_field) + 1, e_field);
+        ADK = tangent_Gamma_ADK(normed_e_field, bandgap);
+    
+        rho_sfi = integrate_population_cb(ADK, delta_t, t);
+        drho = gradient(rho_sfi, delta_t);
+        third_term(1, :) = gradient(displacements_x(1, :).*drho, delta_t);
+        v0 = 0;
+        plasma_current_density = n0 * q * (q/me * e_field.*rho_sfi + v0*drho + third_term);
+        brunel_current_density = n0 * q * q/me * e_field.*rho_sfi;
+        kerr = kerr_current_binomial(e_field_pump, e_field_probe, delta_t);  
+        injection_current_density =  n0 * q * third_term; 
+        overall_current_density = brunel_current_density(1, :) + kerr(1, :) + injection_current_density(1, :);
+        
+        ft_plasma_current = fft(plasma_current_density(1, :),n_fft);
+        ft_brunel_current = fft(brunel_current_density(1, :), n_fft);
+        ft_injection_current = fft(injection_current_density(1, :), n_fft);
+        ft_kerr_current = fft(kerr(1, :), n_fft); 
+        
+        diff_overall_current(i, :) = overall_current_pump_probe(i, :) - overall_current_density(1,:);
+        ft_overall_current = fft(diff_overall_current(i, :), n_fft);
+        ft_overall_current_pump(i,:) = ft_overall_current(1:n_fft/2 + 1);
+        
+        kerr_power_spec = abs(ft_kerr_current/n_fft).^2;
+        injection_power_spec = abs(ft_injection_current/n_fft).^2;
+        whole_power_spec = abs(ft_overall_current/n_fft).^2;
+        brunel_power_spec = abs(ft_brunel_current/n_fft).^2;
+    
+        power_injection_harmonic_pump(i,:) = injection_power_spec(1:n_fft/2 + 1);
+        power_kerr_harmonic_pump(i,:) = kerr_power_spec(1:n_fft/2 + 1);
+        power_density_harmonic_pump(i,:) = whole_power_spec(1:n_fft/2 + 1);
+        power_brunel_harmonic_pump(i,:) = brunel_power_spec(1:n_fft/2 + 1);
+
     end
+    
+    %for i=0:7
+       % modified_log_spec(:, (2*i+1)*idx_pump - idx_half_band:(2*i+1)*idx_pump + idx_half_band) = 30; 
+       %modified_log_spec(:, (2*i+1)*idx_probe - idx_half_band:(2*i+1)*idx_probe + idx_half_band) = 30;
+    %end
+    %min = abs(min(min(power_density_harmonic - power_brunel_harmonic_pump)));
+    
     figure(6)
     % Get the handle of figure(n).
+    modified_log_spec = log10(abs(ft_overall_current_pump/n_fft).^2);
     fig1_comps.fig = gcf;
     p1 = imagesc(f./f_pump, delay_between_pulses.*10^(15), modified_log_spec, [47.5, 52]);
     fig1_comps.tile1.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
@@ -253,7 +317,7 @@ if phase_plot
     caxis(cRange)
     xlim([f(idx - 60)/f_pump, f(idx + 60)/f_pump]);
     xline(f(idx)/f_pump, 'b-');
-    title('Phase zw. Injection & Brunel')
+    title('$$\angle\partial_t j_{Injection} - \angle\partial_t j_{Brunel}$$');
     ax = gca;
     ax.YDir = 'normal';
     fig4_comps.tile1.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
@@ -267,10 +331,16 @@ if phase_plot
     [M1,c1] = contour(f/f_pump, delay_between_pulses.*10^(15), log_power_spec, [49 50 51]);
     c1.LineColor = 'white';
     c1.LineWidth = 1;
+    [M2,c2] = contour(f/f_pump, delay_between_pulses.*10^(15), log_kerr_spec, [49 50 51]);
+    c2.LineColor = 'black';
+    c2.LineWidth = 1;
+    [M3,c3] = contour(f/f_pump, delay_between_pulses.*10^(15), log_injection_spec, [49 50 51]);
+    c3.LineColor = 'blue';
+    c3.LineWidth = 1;
     caxis(cRange)
     xlim([f(idx - 60)/f_pump, f(idx + 60)/f_pump]);
     xline(f(idx)/f_pump, 'b-');
-    title('Phase zw. Injection & Kerr')
+    title('$$\angle\partial_t j_{Injection} - \angle\partial_t j_{Kerr}$$');
     ax = gca;
     ax.YDir = 'normal';
     fig4_comps.tile2.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
@@ -287,7 +357,7 @@ if phase_plot
     caxis(cRange)
     xlim([f(idx - 60)/f_pump, f(idx + 60)/f_pump]);
     xline(f(idx)/f_pump, 'b-');
-    title('Phase zw. Brunel & Kerr')
+    title('$$\angle\partial_t j_{Brunel} - \angle\partial_t j_{Kerr}$$');
     ax = gca;
     ax.YDir = 'normal';
     fig4_comps.tile3.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
