@@ -61,7 +61,8 @@ for i =1:2
         end
         displacements_x = displacement_x_new(bandgaps, normed_e_field + 1, e_field);
         ADK = tangent_Gamma_ADK(normed_e_field, bandgaps);
-        rho_sfi = integrate_population_cb(ADK, delta_t, t);
+        %rho_sfi = integrate_population_cb(ADK, delta_t, t);
+        rho_sfi = integrate_cb_wo_sat(ADK, delta_t, t);
         drho = gradient(rho_sfi, delta_t);
         third_term_parall(1, :) = gradient(displacements_x(1,:).*drho, delta_t);
         v0 = 0;
@@ -81,7 +82,8 @@ for i =1:2
         end
         displacements_x = displacement_x_new(bandgaps, normed_e_field + 1, e_field);
         ADK = tangent_Gamma_ADK(normed_e_field, bandgaps);
-        rho_sfi = integrate_population_cb(ADK, delta_t, t);
+        %rho_sfi = integrate_population_cb(ADK, delta_t, t);
+        rho_sfi = integrate_cb_wo_sat(ADK, delta_t, t);
         drho = gradient(rho_sfi, delta_t);
         third_term_perpe(1,:) = gradient(displacements_x(1,:).*drho, delta_t);
         v0 = 0;
@@ -128,11 +130,11 @@ permutations_i = zeros(length(n_injection),1);
 permutations_b = zeros(length(n_brunel),1);
 
 for j=1:length(n_injection)
-    permutations_i(j) = multinomial_degen(m_injection, n_pu_i(j), n_pr);
+    permutations_i(j) = multinomial_degen(m_injection, n_pu_i(j), n_pr) * (2*n_injection(j)*idx_pump + idx_probe);
 end
 
 for j=1:length(n_brunel)
-    permutations_b(j) = multinomial_degen(m_brunel, n_pu_b(j), n_pr);
+    permutations_b(j) = multinomial_degen(m_brunel, n_pu_b(j), n_pr) * (2*n_brunel(j)*idx_pump + idx_probe)^(-1);
 end
 
 figure(1)
@@ -144,10 +146,10 @@ hold on
 p1 = stem(n_pu_i + f_probe/f_pump, permutations_i/max(permutations_i));
 p2 = stem(n_pu_i + f_probe/f_pump, permutations_i/(max(permutations_i)*m_injection));
 p3 = plot(f./f_pump, spec_injection_perp./spec_injection_para(idx));
-set(p1, 'LineWidth', 1);
-set(p2, 'Linewidth', 1);
-set(p3, 'LineWidth', 1);
-set(p4, 'Linewidth', 1);
+set(p1, 'LineWidth', 1, 'color', 'blue');
+set(p2, 'Linewidth', 1, 'color', 'red');
+set(p3, 'LineWidth', 1, 'color', 'red');
+set(p4, 'Linewidth', 1, 'color', 'blue');
 xlim([0, 20]);
 ylim([10e-11, 10e2]);
 a = gca;
@@ -172,10 +174,10 @@ hold on
 p1 = stem(n_pu_b + f_probe/f_pump, permutations_b/max(permutations_b));
 p2 = stem(n_pu_b + f_probe/f_pump, permutations_b/(max(permutations_b)*m_brunel));
 p3 = plot(f./f_pump, spec_brunel_perp./spec_brunel_para(idx));
-set(p1, 'LineWidth', 1);
-set(p2, 'Linewidth', 1);
-set(p3, 'LineWidth', 1);
-set(p4, 'Linewidth', 1);
+set(p1, 'LineWidth', 1, 'color', 'blue');
+set(p2, 'Linewidth', 1, 'color', 'red');
+set(p3, 'LineWidth', 1, 'color', 'red');
+set(p4, 'Linewidth', 1, 'color', 'blue');
 xlim([0, 20]);
 ylim([10e-11, 10e2]);
 fig1_comps.tile2.plotXLabel = xlabel('$$\omega / \omega_{pump}$$');
